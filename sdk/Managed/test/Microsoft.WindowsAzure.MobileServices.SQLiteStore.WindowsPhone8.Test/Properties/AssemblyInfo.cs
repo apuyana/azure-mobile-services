@@ -15,7 +15,7 @@ using System.Resources;
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 [assembly: AssemblyVersion("1.3.0.1")]
-[assembly: AssemblyFileVersion("1.0.0.0")]
+[assembly: AssemblyFileVersion("1.3.1.4")]
 [assembly: NeutralResourcesLanguageAttribute("en-US")]
 
 // Setting ComVisible to false makes the types in this assembly not visible 

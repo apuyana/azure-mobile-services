@@ -73,6 +73,17 @@ namespace Microsoft.WindowsAzure.MobileServices
 
         /// <summary>
         /// Returns a <see cref="IMobileServiceTable{T}"/> instance, which provides 
+        /// strongly typed data operations for that table.
+        /// </summary>
+        /// <typeparam name="T">
+        /// The type of the instances in the table.
+        /// </typeparam>
+        /// <param name="tableName">Table name.</param>
+        /// <returns>The table.</returns>
+        IMobileServiceTable<T> GetTable<T>(string tableName);
+
+        /// <summary>
+        /// Returns a <see cref="IMobileServiceTable{T}"/> instance, which provides 
         /// strongly typed data operations for a local table.
         /// </summary>
         /// <typeparam name="T">
