@@ -92,7 +92,7 @@ namespace Microsoft.WindowsAzure.MobileServices
             WebAuthenticationResult result = null;
             if (useSingleSignOn)
             {
-                Uri ssoEndUri = WebAuthenticationBroker.GetCurrentApplicationCallbackUri();
+                Uri ssoEndUri = WebAuthenticationBroker.GetCurrentApplicationCallbackUri();                
                 Uri ssoStartUrl = GetUrlWithQueryStringParameter(startUrl, "sso_end_uri", ssoEndUri.AbsoluteUri);
                 result = await WebAuthenticationBroker.AuthenticateAsync(WebAuthenticationOptions.None, ssoStartUrl);
             }

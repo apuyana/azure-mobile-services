@@ -34,7 +34,7 @@ namespace Microsoft.WindowsAzure.MobileServices
         /// </returns>
         protected override Task<string> LoginAsyncOverride()
         {
-            AuthenticationBroker broker = new AuthenticationBroker();
+            AuthenticationBroker broker = new AuthenticationBroker();            
 
             return broker.AuthenticateAsync(this.StartUri, this.EndUri, false);
         }

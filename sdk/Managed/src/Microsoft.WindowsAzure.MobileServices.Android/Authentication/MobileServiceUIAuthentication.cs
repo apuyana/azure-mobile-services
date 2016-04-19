@@ -23,7 +23,7 @@ namespace Microsoft.WindowsAzure.MobileServices
 
             var auth = new WebRedirectAuthenticator (StartUri, EndUri);
             auth.ShowUIErrors = false;
-            auth.ClearCookiesBeforeLogin = false;
+            auth.ClearCookiesBeforeLogin = true;
 
             Intent intent = auth.GetUI (this.context);
 
