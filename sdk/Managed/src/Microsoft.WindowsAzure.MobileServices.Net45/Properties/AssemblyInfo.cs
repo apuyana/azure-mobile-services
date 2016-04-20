@@ -13,8 +13,8 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyProduct("Microsoft Azure Mobile Services SDK")]
 [assembly: AssemblyCopyright("© Microsoft Corporation. All rights reserved.")]
 [assembly: AssemblyCulture("")]
-[assembly: AssemblyVersion("1.3.1.4")]
-[assembly: AssemblyFileVersion("1.3.1.4")]
+[assembly: AssemblyVersion("1.3.1.5")]
+[assembly: AssemblyFileVersion("1.3.1.5")]
 [assembly: NeutralResourcesLanguageAttribute("en-US")]
 
 // Setting ComVisible to false makes the types in this assembly not visible 

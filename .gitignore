@@ -24,3 +24,4 @@ packages
 *.suo
 *.xccheckout
 deriveddata
+/sdk/Managed/src/Microsoft.WindowsAzure.Mobile.Ext.WinUWP/project.lock.json

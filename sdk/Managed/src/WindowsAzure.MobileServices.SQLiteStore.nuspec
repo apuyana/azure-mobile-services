@@ -2,7 +2,7 @@
 <package xmlns="http://schemas.microsoft.com/packaging/2011/08/nuspec.xsd">
     <metadata>
         <id>Anuracode.WindowsAzure.MobileServices.SQLiteStore</id>
-        <version>1.0.1.4</version>
+        <version>1.0.1.5</version>
         <title>Azure Mobile Services SQLiteStore</title>
         <authors>Microsoft</authors>
         <owners>Microsoft,azure-sdk</owners>
@@ -11,13 +11,13 @@
         <iconUrl>http://go.microsoft.com/fwlink/?LinkID=288890</iconUrl>
         <requireLicenseAcceptance>true</requireLicenseAcceptance>
         <description>This client library enables client applications using Windows Azure Mobile Services to enable offline workflows using a backing SQLite Database. For more information, check out https://www.windowsazure.com/mobile.</description>
-        <summary>Windows Azure Mobile Services SDK.</summary>
+        <summary>Windows Azure Mobile Services SDK with bug fixes.</summary>
         <releaseNotes>https://github.com/Azure/azure-mobile-services/blob/master/CHANGELOG.md</releaseNotes>
         <language>en-US</language>
         <tags>microsoft windows azure mobile services windowsazureofficial</tags>
         <dependencies>            
             <dependency id="SQLitePCL" version="[3.8.7.2, 3.8.8)" />
-            <dependency id="Anuracode.WindowsAzure.MobileServices" version="[1.3.1.4, 1.4.0)" />
+            <dependency id="Anuracode.WindowsAzure.MobileServices" version="[1.3.1.5, 1.4.0)" />
         </dependencies>
     </metadata>
     <files>
