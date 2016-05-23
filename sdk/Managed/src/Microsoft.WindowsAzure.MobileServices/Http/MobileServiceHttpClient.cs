@@ -2,6 +2,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // ----------------------------------------------------------------------------
 
+using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -13,31 +14,31 @@ using System.Net.Http.Headers;
 using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
-using Newtonsoft.Json.Linq;
 
 namespace Microsoft.WindowsAzure.MobileServices
 {
     internal class MobileServiceHttpClient : IDisposable
     {
         /// <summary>
+        /// Represents a handler used to process HTTP requests and responses
+        /// associated with the Mobile Service.
+        /// </summary>
+        public HttpMessageHandler httpHandler;
+
+        /// <summary>
         /// Name of the header to indicate the feature(s) initiating the remote server call.
         /// </summary>
         internal const string ZumoFeaturesHeader = "X-ZUMO-FEATURES";
 
         /// <summary>
-        /// Name of the Installation ID header included on each request.
+        /// Factory method for creating the default http client handler
         /// </summary>
-        private const string RequestInstallationIdHeader = "X-ZUMO-INSTALLATION-ID";
+        internal static Func<HttpMessageHandler> DefaultHandlerFactory = GetDefaultHttpClientHandler;
 
         /// <summary>
         /// Name of the application key header included when there's a key.
         /// </summary>
         private const string RequestApplicationKeyHeader = "X-ZUMO-APPLICATION";
-
-        /// <summary>
-        /// Name of the zumo version header.
-        /// </summary>
-        private const string ZumoVersionHeader = "X-ZUMO-VERSION";
 
         /// <summary>
         /// Name of the authentication header included when the user's logged
@@ -46,14 +47,29 @@ namespace Microsoft.WindowsAzure.MobileServices
         private const string RequestAuthenticationHeader = "X-ZUMO-AUTH";
 
         /// <summary>
-        /// Name of the user-agent header.
+        /// Name of the Installation ID header included on each request.
         /// </summary>
-        private const string UserAgentHeader = "User-Agent";
+        private const string RequestInstallationIdHeader = "X-ZUMO-INSTALLATION-ID";
 
         /// <summary>
         /// Content type for request bodies and accepted responses.
         /// </summary>
         private const string RequestJsonContentType = "application/json";
+
+        /// <summary>
+        /// Name of the user-agent header.
+        /// </summary>
+        private const string UserAgentHeader = "User-Agent";
+
+        /// <summary>
+        /// Name of the zumo version header.
+        /// </summary>
+        private const string ZumoVersionHeader = "X-ZUMO-VERSION";
+
+        /// <summary>
+        /// The application key for the Microsoft Azure Mobile Service.
+        /// </summary>
+        private readonly string applicationKey;
 
         /// <summary>
         /// The URI for the Microsoft Azure Mobile Service.
@@ -64,22 +80,6 @@ namespace Microsoft.WindowsAzure.MobileServices
         /// The installation id of the application.
         /// </summary>
         private readonly string installationId;
-
-        /// <summary>
-        /// The application key for the Microsoft Azure Mobile Service.
-        /// </summary>
-        private readonly string applicationKey;
-
-        /// <summary>
-        /// The user-agent header value to use with all requests.
-        /// </summary>
-        private string userAgentHeaderValue;
-
-        /// <summary>
-        /// Represents a handler used to process HTTP requests and responses
-        /// associated with the Mobile Service.  
-        /// </summary>
-        public HttpMessageHandler httpHandler;
 
         /// <summary>
         /// The client which will be used to send regular (non-login) HTTP
@@ -99,19 +99,18 @@ namespace Microsoft.WindowsAzure.MobileServices
         /// client for them.</remarks>
         private HttpClient httpClientSansHandlers;
 
-
         /// <summary>
-        /// Factory method for creating the default http client handler
+        /// The user-agent header value to use with all requests.
         /// </summary>
-        internal static Func<HttpMessageHandler> DefaultHandlerFactory = GetDefaultHttpClientHandler;
+        private string userAgentHeaderValue;
 
         /// <summary>
-        /// Instantiates a new <see cref="MobileServiceHttpClient"/>, 
+        /// Instantiates a new <see cref="MobileServiceHttpClient"/>,
         /// which does all the request to a mobile service.
         /// </summary>
         /// <param name="handlers">
-        /// Chain of <see cref="HttpMessageHandler" /> instances. 
-        /// All but the last should be <see cref="DelegatingHandler"/>s. 
+        /// Chain of <see cref="HttpMessageHandler" /> instances.
+        /// All but the last should be <see cref="DelegatingHandler"/>s.
         /// </param>
         /// <param name="applicationUri">
         /// The URI for the Microsoft Azure Mobile Service.
@@ -122,7 +121,8 @@ namespace Microsoft.WindowsAzure.MobileServices
         /// <param name="applicationKey">
         /// The application key for the Microsoft Azure Mobile Service.
         /// </param>
-        public MobileServiceHttpClient(IEnumerable<HttpMessageHandler> handlers, Uri applicationUri, string installationId, string applicationKey)
+        /// <param name="timeOut">Timeout for the connection.</param>
+		public MobileServiceHttpClient(IEnumerable<HttpMessageHandler> handlers, Uri applicationUri, string installationId, string applicationKey, TimeSpan timeOut)
         {
             Debug.Assert(handlers != null);
             Debug.Assert(applicationUri != null);
@@ -132,8 +132,8 @@ namespace Microsoft.WindowsAzure.MobileServices
             this.applicationKey = applicationKey;
 
             this.httpHandler = CreatePipeline(handlers);
-            this.httpClient = new HttpClient(httpHandler);
-            this.httpClientSansHandlers = new HttpClient(DefaultHandlerFactory());
+            this.httpClient = new HttpClient(httpHandler) { Timeout = timeOut };
+            this.httpClientSansHandlers = new HttpClient(DefaultHandlerFactory()) { Timeout = timeOut };
 
             this.userAgentHeaderValue = GetUserAgentHeader();
 
@@ -146,29 +146,12 @@ namespace Microsoft.WindowsAzure.MobileServices
         }
 
         /// <summary>
-        /// Performs a web request and includes the standard Mobile Services
-        /// headers. It will use an HttpClient without any http handlers.
+        /// Implemenation of <see cref="IDisposable"/>
         /// </summary>
-        /// <param name="method">
-        /// The HTTP method used to request the resource.
-        /// </param>
-        /// <param name="uriPathAndQuery">
-        /// The URI of the resource to request (relative to the Mobile Services
-        /// runtime).
-        /// </param>
-        /// <param name="user">
-        /// The object representing the user on behalf of whom the request will be sent.
-        /// </param>
-        /// <param name="content">
-        /// Optional content to send to the resource.
-        /// </param>
-        /// <returns>
-        /// The content of the response as a string.
-        /// </returns>
-        public async Task<string> RequestWithoutHandlersAsync(HttpMethod method, string uriPathAndQuery, MobileServiceUser user, string content = null)
+        public void Dispose()
         {
-            MobileServiceHttpResponse response = await this.RequestAsync(false, method, uriPathAndQuery, user, content, false);
-            return response.Content;
+            this.Dispose(true);
+            GC.SuppressFinalize(this);
         }
 
         /// <summary>
@@ -214,81 +197,6 @@ namespace Microsoft.WindowsAzure.MobileServices
 
         /// <summary>
         /// Makes an HTTP request that includes the standard Mobile Services
-        /// headers. It will use an HttpClient that optionally has user-defined 
-        /// http handlers.
-        /// </summary>
-        /// <param name="UseHandlers">Determines if the HttpClient will use user-defined http handlers</param>
-        /// <param name="method">
-        /// The HTTP method used to request the resource.
-        /// </param>
-        /// <param name="uriPathAndQuery">
-        /// The URI of the resource to request (relative to the Mobile Services
-        /// runtime).
-        /// </param>
-        /// <param name="user">
-        /// The object representing the user on behalf of whom the request will be sent.
-        /// </param>
-        /// <param name="content">
-        /// Optional content to send to the resource.
-        /// </param>
-        /// <param name="ensureResponseContent">
-        /// Optional parameter to indicate if the response should include content.
-        /// </param>
-        /// <param name="requestHeaders">
-        /// Additional request headers to include with the request.
-        /// </param>
-        /// <returns>
-        /// The content of the response as a string.
-        /// </returns>
-        private async Task<MobileServiceHttpResponse> RequestAsync(bool UseHandlers,
-                                                        HttpMethod method,
-                                                        string uriPathAndQuery,
-                                                        MobileServiceUser user,
-                                                        string content = null,
-                                                        bool ensureResponseContent = true,
-                                                        IDictionary<string, string> requestHeaders = null)
-        {
-            Debug.Assert(method != null);
-            Debug.Assert(!string.IsNullOrEmpty(uriPathAndQuery));
-
-            // Create the request
-            HttpContent httpContent = CreateHttpContent(content);
-            HttpRequestMessage request = this.CreateHttpRequestMessage(method, uriPathAndQuery, requestHeaders, httpContent, user);
-            request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue(RequestJsonContentType));
-
-            // Get the response
-            HttpClient client;
-            if (UseHandlers)
-            {
-                client = this.httpClient;
-            }
-            else
-            {
-                client = this.httpClientSansHandlers;
-            }
-            HttpResponseMessage response = await this.SendRequestAsync(client, request, ensureResponseContent);
-            string responseContent = await GetResponseContent(response);
-            string etag = null;
-            if (response.Headers.ETag != null)
-            {
-                etag = response.Headers.ETag.Tag;
-            }
-
-            LinkHeaderValue link = null;
-            if (response.Headers.Contains("Link"))
-            {
-                link = LinkHeaderValue.Parse(response.Headers.GetValues("Link").FirstOrDefault());
-            }
-
-            // Dispose of the request and response
-            request.Dispose();
-            response.Dispose();
-
-            return new MobileServiceHttpResponse(responseContent, etag, link);
-        }
-
-        /// <summary>
-        /// Makes an HTTP request that includes the standard Mobile Services
         /// headers. It will use an HttpClient with user-defined http handlers.
         /// </summary>
         /// <param name="method">
@@ -329,12 +237,29 @@ namespace Microsoft.WindowsAzure.MobileServices
         }
 
         /// <summary>
-        /// Implemenation of <see cref="IDisposable"/>
+        /// Performs a web request and includes the standard Mobile Services
+        /// headers. It will use an HttpClient without any http handlers.
         /// </summary>
-        public void Dispose()
+        /// <param name="method">
+        /// The HTTP method used to request the resource.
+        /// </param>
+        /// <param name="uriPathAndQuery">
+        /// The URI of the resource to request (relative to the Mobile Services
+        /// runtime).
+        /// </param>
+        /// <param name="user">
+        /// The object representing the user on behalf of whom the request will be sent.
+        /// </param>
+        /// <param name="content">
+        /// Optional content to send to the resource.
+        /// </param>
+        /// <returns>
+        /// The content of the response as a string.
+        /// </returns>
+        public async Task<string> RequestWithoutHandlersAsync(HttpMethod method, string uriPathAndQuery, MobileServiceUser user, string content = null)
         {
-            this.Dispose(true);
-            GC.SuppressFinalize(this);
+            MobileServiceHttpResponse response = await this.RequestAsync(false, method, uriPathAndQuery, user, content, false);
+            return response.Content;
         }
 
         /// <summary>
@@ -374,7 +299,7 @@ namespace Microsoft.WindowsAzure.MobileServices
         /// Creates an <see cref="HttpContent"/> instance from a string.
         /// </summary>
         /// <param name="content">
-        /// The string content from which to create the <see cref="HttpContent"/> instance. 
+        /// The string content from which to create the <see cref="HttpContent"/> instance.
         /// </param>
         /// <returns>
         /// An <see cref="HttpContent"/> instance or null if the <paramref name="content"/>
@@ -389,6 +314,62 @@ namespace Microsoft.WindowsAzure.MobileServices
             }
 
             return httpContent;
+        }
+
+        /// <summary>
+        /// Transform an IEnumerable of <see cref="HttpMessageHandler"/>s into
+        /// a chain of <see cref="HttpMessageHandler"/>s.
+        /// </summary>
+        /// <param name="handlers">
+        /// Chain of <see cref="HttpMessageHandler" /> instances.
+        /// All but the last should be <see cref="DelegatingHandler"/>s.
+        /// </param>
+        /// <returns>A chain of <see cref="HttpMessageHandler"/>s</returns>
+        private static HttpMessageHandler CreatePipeline(IEnumerable<HttpMessageHandler> handlers)
+        {
+            HttpMessageHandler pipeline = handlers.LastOrDefault() ?? DefaultHandlerFactory();
+            DelegatingHandler dHandler = pipeline as DelegatingHandler;
+            if (dHandler != null)
+            {
+                dHandler.InnerHandler = DefaultHandlerFactory();
+                pipeline = dHandler;
+            }
+
+            // Wire handlers up in reverse order
+            IEnumerable<HttpMessageHandler> reversedHandlers = handlers.Reverse().Skip(1);
+            foreach (HttpMessageHandler handler in reversedHandlers)
+            {
+                dHandler = handler as DelegatingHandler;
+                if (dHandler == null)
+                {
+                    throw new ArgumentException(
+                        string.Format(
+                        Resources.HttpMessageHandlerExtensions_WrongHandlerType,
+                        typeof(DelegatingHandler).Name));
+                }
+
+                dHandler.InnerHandler = pipeline;
+                pipeline = dHandler;
+            }
+
+            return pipeline;
+        }
+
+        /// <summary>
+        /// Returns a default HttpMessageHandler that supports automatic decompression.
+        /// </summary>
+        /// <returns>
+        /// A default HttpClientHandler that supports automatic decompression
+        /// </returns>
+        private static HttpMessageHandler GetDefaultHttpClientHandler()
+        {
+            var handler = new HttpClientHandler();
+            if (handler.SupportsAutomaticDecompression)
+            {
+                handler.AutomaticDecompression = DecompressionMethods.GZip;
+            }
+
+            return handler;
         }
 
         /// <summary>
@@ -501,7 +482,7 @@ namespace Microsoft.WindowsAzure.MobileServices
         }
 
         /// <summary>
-        /// Creates an <see cref="HttpRequestMessage"/> with all of the 
+        /// Creates an <see cref="HttpRequestMessage"/> with all of the
         /// required Mobile Service headers.
         /// </summary>
         /// <param name="method">
@@ -521,7 +502,7 @@ namespace Microsoft.WindowsAzure.MobileServices
         /// The object representing the user on behalf of whom the request will be sent.
         /// </param>
         /// <returns>
-        /// An <see cref="HttpRequestMessage"/> with all of the 
+        /// An <see cref="HttpRequestMessage"/> with all of the
         /// required Mobile Service headers.
         /// </returns>
         private HttpRequestMessage CreateHttpRequestMessage(HttpMethod method, string uriPathAndQuery, IDictionary<string, string> requestHeaders, HttpContent content, MobileServiceUser user)
@@ -563,6 +544,108 @@ namespace Microsoft.WindowsAzure.MobileServices
             }
 
             return request;
+        }
+
+        /// <summary>
+        /// Gets the user-agent header to use with all requests.
+        /// </summary>
+        /// <returns>
+        /// An HTTP user-agent header.
+        /// </returns>
+        private string GetUserAgentHeader()
+        {
+            AssemblyFileVersionAttribute fileVersionAttribute = typeof(MobileServiceClient).GetTypeInfo().Assembly
+                                                                        .GetCustomAttributes(typeof(AssemblyFileVersionAttribute))
+                                                                        .Cast<AssemblyFileVersionAttribute>()
+                                                                        .FirstOrDefault();
+            string fileVersion = fileVersionAttribute.Version;
+            string sdkVersion = string.Join(".", fileVersion.Split('.').Take(2)); // Get just the major and minor versions
+
+            IPlatformInformation platformInformation = Platform.Instance.PlatformInformation;
+            return string.Format(
+                CultureInfo.InvariantCulture,
+                "ZUMO/{0} (lang={1}; os={2}; os_version={3}; arch={4}; version={5})",
+                sdkVersion,
+                "Managed",
+                platformInformation.OperatingSystemName,
+                platformInformation.OperatingSystemVersion,
+                platformInformation.OperatingSystemArchitecture,
+                fileVersion);
+        }
+
+        /// <summary>
+        /// Makes an HTTP request that includes the standard Mobile Services
+        /// headers. It will use an HttpClient that optionally has user-defined
+        /// http handlers.
+        /// </summary>
+        /// <param name="UseHandlers">Determines if the HttpClient will use user-defined http handlers</param>
+        /// <param name="method">
+        /// The HTTP method used to request the resource.
+        /// </param>
+        /// <param name="uriPathAndQuery">
+        /// The URI of the resource to request (relative to the Mobile Services
+        /// runtime).
+        /// </param>
+        /// <param name="user">
+        /// The object representing the user on behalf of whom the request will be sent.
+        /// </param>
+        /// <param name="content">
+        /// Optional content to send to the resource.
+        /// </param>
+        /// <param name="ensureResponseContent">
+        /// Optional parameter to indicate if the response should include content.
+        /// </param>
+        /// <param name="requestHeaders">
+        /// Additional request headers to include with the request.
+        /// </param>
+        /// <returns>
+        /// The content of the response as a string.
+        /// </returns>
+        private async Task<MobileServiceHttpResponse> RequestAsync(bool UseHandlers,
+                                                        HttpMethod method,
+                                                        string uriPathAndQuery,
+                                                        MobileServiceUser user,
+                                                        string content = null,
+                                                        bool ensureResponseContent = true,
+                                                        IDictionary<string, string> requestHeaders = null)
+        {
+            Debug.Assert(method != null);
+            Debug.Assert(!string.IsNullOrEmpty(uriPathAndQuery));
+
+            // Create the request
+            HttpContent httpContent = CreateHttpContent(content);
+            HttpRequestMessage request = this.CreateHttpRequestMessage(method, uriPathAndQuery, requestHeaders, httpContent, user);
+            request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue(RequestJsonContentType));
+
+            // Get the response
+            HttpClient client;
+            if (UseHandlers)
+            {
+                client = this.httpClient;
+            }
+            else
+            {
+                client = this.httpClientSansHandlers;
+            }
+            HttpResponseMessage response = await this.SendRequestAsync(client, request, ensureResponseContent);
+            string responseContent = await GetResponseContent(response);
+            string etag = null;
+            if (response.Headers.ETag != null)
+            {
+                etag = response.Headers.ETag.Tag;
+            }
+
+            LinkHeaderValue link = null;
+            if (response.Headers.Contains("Link"))
+            {
+                link = LinkHeaderValue.Parse(response.Headers.GetValues("Link").FirstOrDefault());
+            }
+
+            // Dispose of the request and response
+            request.Dispose();
+            response.Dispose();
+
+            return new MobileServiceHttpResponse(responseContent, etag, link);
         }
 
         /// <summary>
@@ -613,92 +696,9 @@ namespace Microsoft.WindowsAzure.MobileServices
         }
 
         /// <summary>
-        /// Transform an IEnumerable of <see cref="HttpMessageHandler"/>s into
-        /// a chain of <see cref="HttpMessageHandler"/>s.
-        /// </summary>
-        /// <param name="handlers">
-        /// Chain of <see cref="HttpMessageHandler" /> instances. 
-        /// All but the last should be <see cref="DelegatingHandler"/>s. 
-        /// </param>
-        /// <returns>A chain of <see cref="HttpMessageHandler"/>s</returns>
-        private static HttpMessageHandler CreatePipeline(IEnumerable<HttpMessageHandler> handlers)
-        {
-            HttpMessageHandler pipeline = handlers.LastOrDefault() ?? DefaultHandlerFactory();
-            DelegatingHandler dHandler = pipeline as DelegatingHandler;
-            if (dHandler != null)
-            {
-                dHandler.InnerHandler = DefaultHandlerFactory();
-                pipeline = dHandler;
-            }
-
-            // Wire handlers up in reverse order
-            IEnumerable<HttpMessageHandler> reversedHandlers = handlers.Reverse().Skip(1);
-            foreach (HttpMessageHandler handler in reversedHandlers)
-            {
-                dHandler = handler as DelegatingHandler;
-                if (dHandler == null)
-                {
-                    throw new ArgumentException(
-                        string.Format(
-                        Resources.HttpMessageHandlerExtensions_WrongHandlerType,
-                        typeof(DelegatingHandler).Name));
-                }
-
-                dHandler.InnerHandler = pipeline;
-                pipeline = dHandler;
-            }
-
-            return pipeline;
-        }
-
-        /// <summary>
-        /// Returns a default HttpMessageHandler that supports automatic decompression.
-        /// </summary>
-        /// <returns>
-        /// A default HttpClientHandler that supports automatic decompression
-        /// </returns>
-        private static HttpMessageHandler GetDefaultHttpClientHandler()
-        {
-            var handler = new HttpClientHandler();
-            if (handler.SupportsAutomaticDecompression)
-            {
-                handler.AutomaticDecompression = DecompressionMethods.GZip;
-            }
-
-            return handler;
-        }
-
-        /// <summary>
-        /// Gets the user-agent header to use with all requests.
-        /// </summary>
-        /// <returns>
-        /// An HTTP user-agent header.
-        /// </returns>
-        private string GetUserAgentHeader()
-        {
-            AssemblyFileVersionAttribute fileVersionAttribute = typeof(MobileServiceClient).GetTypeInfo().Assembly
-                                                                        .GetCustomAttributes(typeof(AssemblyFileVersionAttribute))
-                                                                        .Cast<AssemblyFileVersionAttribute>()
-                                                                        .FirstOrDefault();
-            string fileVersion = fileVersionAttribute.Version;
-            string sdkVersion = string.Join(".", fileVersion.Split('.').Take(2)); // Get just the major and minor versions
-
-            IPlatformInformation platformInformation = Platform.Instance.PlatformInformation;
-            return string.Format(
-                CultureInfo.InvariantCulture,
-                "ZUMO/{0} (lang={1}; os={2}; os_version={3}; arch={4}; version={5})",
-                sdkVersion,
-                "Managed",
-                platformInformation.OperatingSystemName,
-                platformInformation.OperatingSystemVersion,
-                platformInformation.OperatingSystemArchitecture,
-                fileVersion);
-        }
-
-        /// <summary>
         /// Helper class to create the HTTP headers used for sending feature usage to the service.
         /// </summary>
-        static class FeaturesHelper
+        private static class FeaturesHelper
         {
             /// <summary>
             /// Existing features which can be sent for telemetry purposes to the server.

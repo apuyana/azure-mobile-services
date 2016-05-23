@@ -90,7 +90,7 @@ namespace Microsoft.WindowsAzure.MobileServices
         /// The application key for the Microsoft Azure Mobile Service.
         /// </param>
         public MobileServiceClient(Uri applicationUri, string applicationKey)
-            : this(applicationUri, applicationKey, null)
+            : this(applicationUri, applicationKey, TimeSpan.FromSeconds(60), null)
         {
         }
 
@@ -109,7 +109,7 @@ namespace Microsoft.WindowsAzure.MobileServices
         /// </param>
         [SuppressMessage("Microsoft.Design", "CA1054:UriParametersShouldNotBeStrings", MessageId = "0#", Justification = "Enables easier copy/paste getting started workflow")]
         public MobileServiceClient(string applicationUrl, string applicationKey, params HttpMessageHandler[] handlers)
-            : this(new Uri(applicationUrl), applicationKey, handlers)
+            : this(new Uri(applicationUrl), applicationKey, TimeSpan.FromSeconds(60), handlers)
         {
         }
 
@@ -126,7 +126,8 @@ namespace Microsoft.WindowsAzure.MobileServices
         /// Chain of <see cref="HttpMessageHandler" /> instances.
         /// All but the last should be <see cref="DelegatingHandler"/>s.
         /// </param>
-        public MobileServiceClient(Uri applicationUri, string applicationKey, params HttpMessageHandler[] handlers)
+        /// <param name="timeOut">Timeout for the connection.</param>
+        public MobileServiceClient(Uri applicationUri, string applicationKey, TimeSpan timeOut, params HttpMessageHandler[] handlers)
         {
             if (applicationUri == null)
             {
@@ -138,7 +139,7 @@ namespace Microsoft.WindowsAzure.MobileServices
             this.applicationInstallationId = GetApplicationInstallationId();
 
             handlers = handlers ?? EmptyHttpMessageHandlers;
-            this.HttpClient = new MobileServiceHttpClient(handlers, this.ApplicationUri, this.applicationInstallationId, this.ApplicationKey);
+            this.HttpClient = new MobileServiceHttpClient(handlers, this.ApplicationUri, this.applicationInstallationId, this.ApplicationKey, timeOut);
             this.Serializer = new MobileServiceSerializer();
             this.SyncContext = new MobileServiceSyncContext(this);
         }

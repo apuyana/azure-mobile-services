@@ -14,8 +14,8 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyCopyright("© Microsoft Corporation. All rights reserved.")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
-[assembly: AssemblyVersion("1.3.1.5")]
-[assembly: AssemblyFileVersion("1.3.1.5")]
+[assembly: AssemblyVersion("1.3.1.6")]
+[assembly: AssemblyFileVersion("1.3.1.6")]
 [assembly: NeutralResourcesLanguageAttribute("en-US")]
 
 #if Sign
