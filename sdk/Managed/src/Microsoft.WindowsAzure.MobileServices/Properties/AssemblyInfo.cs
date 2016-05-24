@@ -13,8 +13,8 @@ using System.Runtime.CompilerServices;
 [assembly: AssemblyCopyright("© Microsoft Corporation. All rights reserved.")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
-[assembly: AssemblyVersion("1.3.1.6")]
-[assembly: AssemblyFileVersion("1.3.1.6")]
+[assembly: AssemblyVersion("1.3.1.7")]
+[assembly: AssemblyFileVersion("1.3.1.7")]
 [assembly: NeutralResourcesLanguageAttribute("en-US")]
 
 #if Sign

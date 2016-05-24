@@ -132,8 +132,14 @@ namespace Microsoft.WindowsAzure.MobileServices
             this.applicationKey = applicationKey;
 
             this.httpHandler = CreatePipeline(handlers);
-            this.httpClient = new HttpClient(httpHandler) { Timeout = timeOut };
-            this.httpClientSansHandlers = new HttpClient(DefaultHandlerFactory()) { Timeout = timeOut };
+            this.httpClient = new HttpClient(httpHandler);
+            this.httpClientSansHandlers = new HttpClient(DefaultHandlerFactory());
+
+            if (timeOut != null)
+            {
+                this.httpClient.Timeout = timeOut;
+                this.httpClientSansHandlers.Timeout = timeOut;
+            }
 
             this.userAgentHeaderValue = GetUserAgentHeader();
 
