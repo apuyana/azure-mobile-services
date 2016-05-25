@@ -59,7 +59,7 @@ namespace Microsoft.WindowsAzure.MobileServices
         /// All but the last should be <see cref="DelegatingHandler"/>s.
         /// </param>
         /// <param name="timeOut">Timeout for the connection.</param>
-        public MobileServiceClient(Uri applicationUri, string applicationKey, TimeSpan timeOut, params HttpMessageHandler[] handlers)
+        public MobileServiceClient(Uri applicationUri, string applicationKey, TimeSpan? timeOut, params HttpMessageHandler[] handlers)
         {
             if (applicationUri == null)
             {

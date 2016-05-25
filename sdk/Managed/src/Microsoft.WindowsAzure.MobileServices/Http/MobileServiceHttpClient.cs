@@ -122,7 +122,7 @@ namespace Microsoft.WindowsAzure.MobileServices
         /// The application key for the Microsoft Azure Mobile Service.
         /// </param>
         /// <param name="timeOut">Timeout for the connection.</param>
-		public MobileServiceHttpClient(IEnumerable<HttpMessageHandler> handlers, Uri applicationUri, string installationId, string applicationKey, TimeSpan timeOut)
+		public MobileServiceHttpClient(IEnumerable<HttpMessageHandler> handlers, Uri applicationUri, string installationId, string applicationKey, TimeSpan? timeOut)
         {
             Debug.Assert(handlers != null);
             Debug.Assert(applicationUri != null);
@@ -135,10 +135,10 @@ namespace Microsoft.WindowsAzure.MobileServices
             this.httpClient = new HttpClient(httpHandler);
             this.httpClientSansHandlers = new HttpClient(DefaultHandlerFactory());
 
-            if (timeOut != null)
+            if (timeOut != null && timeOut.HasValue)
             {
-                this.httpClient.Timeout = timeOut;
-                this.httpClientSansHandlers.Timeout = timeOut;
+                this.httpClient.Timeout = timeOut.Value;
+                this.httpClientSansHandlers.Timeout = timeOut.Value;
             }
 
             this.userAgentHeaderValue = GetUserAgentHeader();
