@@ -40,78 +40,10 @@ namespace Microsoft.WindowsAzure.MobileServices
         /// </summary>
         private static readonly HttpMessageHandler[] EmptyHttpMessageHandlers = new HttpMessageHandler[0];
 
-        private static HttpMethod defaultHttpMethod = HttpMethod.Post;
-
         /// <summary>
-        /// Initializes a new instance of the MobileServiceClient class.
+        /// Default method.
         /// </summary>
-        /// <param name="applicationUrl">
-        /// The URI for the Microsoft Azure Mobile Service.
-        /// </param>
-        [SuppressMessage("Microsoft.Design", "CA1054:UriParametersShouldNotBeStrings", MessageId = "0#", Justification = "Enables easier copy/paste getting started workflow")]
-        public MobileServiceClient(string applicationUrl)
-            : this(new Uri(applicationUrl))
-        {
-        }
-
-        /// <summary>
-        /// Initializes a new instance of the MobileServiceClient class.
-        /// </summary>
-        /// <param name="applicationUri">
-        /// The URI for the Microsoft Azure Mobile Service.
-        /// </param>
-        public MobileServiceClient(Uri applicationUri)
-            : this(applicationUri, null)
-        {
-        }
-
-        /// <summary>
-        /// Initializes a new instance of the MobileServiceClient class.
-        /// </summary>
-        /// <param name="applicationUrl">
-        /// The URI for the Microsoft Azure Mobile Service.
-        /// </param>
-        /// <param name="applicationKey">
-        /// The application key for the Microsoft Azure Mobile Service.
-        /// </param>
-        [SuppressMessage("Microsoft.Design", "CA1054:UriParametersShouldNotBeStrings", MessageId = "0#", Justification = "Enables easier copy/paste getting started workflow")]
-        public MobileServiceClient(string applicationUrl, string applicationKey)
-            : this(new Uri(applicationUrl), applicationKey)
-        {
-        }
-
-        /// <summary>
-        /// Initializes a new instance of the MobileServiceClient class.
-        /// </summary>
-        /// <param name="applicationUri">
-        /// The URI for the Microsoft Azure Mobile Service.
-        /// </param>
-        /// <param name="applicationKey">
-        /// The application key for the Microsoft Azure Mobile Service.
-        /// </param>
-        public MobileServiceClient(Uri applicationUri, string applicationKey)
-            : this(applicationUri, applicationKey, TimeSpan.FromSeconds(60), null)
-        {
-        }
-
-        /// <summary>
-        /// Initializes a new instance of the MobileServiceClient class.
-        /// </summary>
-        /// <param name="applicationUrl">
-        /// The URI for the Microsoft Azure Mobile Service.
-        /// </param>
-        /// <param name="applicationKey">
-        /// The application key for the Microsoft Azure Mobile Service.
-        /// </param>
-        /// <param name="handlers">
-        /// Chain of <see cref="HttpMessageHandler" /> instances.
-        /// All but the last should be <see cref="DelegatingHandler"/>s.
-        /// </param>
-        [SuppressMessage("Microsoft.Design", "CA1054:UriParametersShouldNotBeStrings", MessageId = "0#", Justification = "Enables easier copy/paste getting started workflow")]
-        public MobileServiceClient(string applicationUrl, string applicationKey, params HttpMessageHandler[] handlers)
-            : this(new Uri(applicationUrl), applicationKey, TimeSpan.FromSeconds(60), handlers)
-        {
-        }
+        private static HttpMethod defaultHttpMethod = HttpMethod.Post;        
 
         /// <summary>
         /// Initializes a new instance of the MobileServiceClient class.
