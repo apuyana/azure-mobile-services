@@ -38,7 +38,7 @@ namespace Microsoft.WindowsAzure.MobileServices.Test
         public async Task DateUri()
         {
             TestHttpHandler hijack = new TestHttpHandler();
-            IMobileServiceClient client = new MobileServiceClient("http://www.test.com", null, hijack);
+            IMobileServiceClient client = new MobileServiceClient("http://www.test.com", string.Empty, hijack);
             IMobileServiceTable<DateExample> table = client.GetTable<DateExample>();
 
             hijack.Response = new HttpResponseMessage(HttpStatusCode.OK);
@@ -61,7 +61,7 @@ namespace Microsoft.WindowsAzure.MobileServices.Test
         public async Task DateOffsetUri()
         {
             TestHttpHandler hijack = new TestHttpHandler();
-            IMobileServiceClient client = new MobileServiceClient("http://www.test.com", null, hijack);
+            IMobileServiceClient client = new MobileServiceClient("http://www.test.com", string.Empty, hijack);
             IMobileServiceTable<DateOffsetExample> table = client.GetTable<DateOffsetExample>();
 
             hijack.Response = new HttpResponseMessage(HttpStatusCode.OK);

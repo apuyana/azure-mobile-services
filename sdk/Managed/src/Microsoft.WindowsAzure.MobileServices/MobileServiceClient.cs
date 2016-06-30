@@ -57,6 +57,40 @@ namespace Microsoft.WindowsAzure.MobileServices
         /// <param name="handlers">
         /// Chain of <see cref="HttpMessageHandler" /> instances.
         /// All but the last should be <see cref="DelegatingHandler"/>s.
+        /// </param>        
+        public MobileServiceClient(string applicationUri, params HttpMessageHandler[] handlers) : this(new Uri(applicationUri), null, null, handlers: handlers)
+        {
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the MobileServiceClient class.
+        /// </summary>
+        /// <param name="applicationUri">
+        /// The URI for the Microsoft Azure Mobile Service.
+        /// </param>
+        /// <param name="applicationKey">
+        /// The application key for the Microsoft Azure Mobile Service.
+        /// </param>
+        /// <param name="handlers">
+        /// Chain of <see cref="HttpMessageHandler" /> instances.
+        /// All but the last should be <see cref="DelegatingHandler"/>s.
+        /// </param>        
+        public MobileServiceClient(string applicationUri, string applicationKey, params HttpMessageHandler[] handlers) : this(new Uri(applicationUri), applicationKey, null, handlers: handlers)
+        {
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the MobileServiceClient class.
+        /// </summary>
+        /// <param name="applicationUri">
+        /// The URI for the Microsoft Azure Mobile Service.
+        /// </param>
+        /// <param name="applicationKey">
+        /// The application key for the Microsoft Azure Mobile Service.
+        /// </param>
+        /// <param name="handlers">
+        /// Chain of <see cref="HttpMessageHandler" /> instances.
+        /// All but the last should be <see cref="DelegatingHandler"/>s.
         /// </param>
         /// <param name="timeOut">Timeout for the connection.</param>
         public MobileServiceClient(Uri applicationUri, string applicationKey, TimeSpan? timeOut, params HttpMessageHandler[] handlers)

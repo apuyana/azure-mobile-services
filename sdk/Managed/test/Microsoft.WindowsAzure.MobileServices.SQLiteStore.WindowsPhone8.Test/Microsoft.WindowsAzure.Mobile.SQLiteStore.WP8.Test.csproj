@@ -220,8 +220,8 @@
     <Folder Include="UnitTests\" />
   </ItemGroup>
   <ItemGroup>
-    <SDKReference Include="SQLite.WP80, version=3.8.7.2">
-      <Name>SQLite for Windows Phone</Name>
+    <SDKReference Include="SQLite.WP80, Version=3.10.2">
+      <Name>SQLite for Windows Phone %28SQLite.WP80, Version=3.10.2%29</Name>
     </SDKReference>
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath)\Microsoft\$(TargetFrameworkIdentifier)\$(TargetFrameworkVersion)\Microsoft.$(TargetFrameworkIdentifier).$(TargetFrameworkVersion).Overrides.targets" />

@@ -29,7 +29,7 @@ namespace Microsoft.WindowsAzure.MobileServices.Test.UnitTests
             var originalFactory = MobileServiceHttpClient.DefaultHandlerFactory;
             MobileServiceHttpClient.DefaultHandlerFactory = () => this.hijack;
 
-            this.client = new MobileServiceClient(new Uri(appUrl), appKey, hijack);
+            this.client = new MobileServiceClient(appUrl, appKey, hijack);
 
             MobileServiceHttpClient.DefaultHandlerFactory = originalFactory;
         }

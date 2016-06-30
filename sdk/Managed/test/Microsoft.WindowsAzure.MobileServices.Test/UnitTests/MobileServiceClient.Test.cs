@@ -25,7 +25,7 @@ namespace Microsoft.WindowsAzure.MobileServices.Test
         [TestMethod]
         public void InstallationId()
         {
-            MobileServiceClient service = new MobileServiceClient("http://test.com");
+            MobileServiceClient service = new MobileServiceClient(new Uri("http://test.com"), null, null);
 
             //string settings = ApplicationData.Current.LocalSettings.Values["MobileServices.Installation.config"] as string;
             //string id = (string)JToken.Parse(settings)["applicationInstallationId"];
@@ -38,25 +38,25 @@ namespace Microsoft.WindowsAzure.MobileServices.Test
             string appUrl = "http://www.test.com/";
             string appKey = "secret...";
 
-            MobileServiceClient service = new MobileServiceClient(new Uri(appUrl), appKey);
+            MobileServiceClient service = new MobileServiceClient(new Uri(appUrl), appKey, null);
             Assert.AreEqual(appUrl, service.ApplicationUri.ToString());
             Assert.AreEqual(appKey, service.ApplicationKey);
 
-            service = new MobileServiceClient(appUrl, appKey);
+            service = new MobileServiceClient(new Uri(appUrl), appKey, null);
             Assert.AreEqual(appUrl, service.ApplicationUri.ToString());
             Assert.AreEqual(appKey, service.ApplicationKey);
 
-            service = new MobileServiceClient(new Uri(appUrl));
+            service = new MobileServiceClient(new Uri(appUrl), null, null);
             Assert.AreEqual(appUrl, service.ApplicationUri.ToString());
             Assert.AreEqual(null, service.ApplicationKey);
 
-            service = new MobileServiceClient(appUrl);
+            service = new MobileServiceClient(new Uri(appUrl), null, null);
             Assert.AreEqual(appUrl, service.ApplicationUri.ToString());
             Assert.AreEqual(null, service.ApplicationKey);
 
             Uri none = null;
-            Throws<ArgumentNullException>(() => new MobileServiceClient(none));
-            Throws<FormatException>(() => new MobileServiceClient("not a valid uri!!!@#!@#"));
+            Throws<ArgumentNullException>(() => new MobileServiceClient(none, null, null));
+            Throws<FormatException>(() => new MobileServiceClient(new Uri("not a valid uri!!!@#!@#"), null, null));
         }
 
 
@@ -68,7 +68,7 @@ namespace Microsoft.WindowsAzure.MobileServices.Test
             TestHttpHandler hijack = new TestHttpHandler();
 
             IMobileServiceClient service =
-                new MobileServiceClient(new Uri(appUrl), appKey, hijack);
+                new MobileServiceClient(new Uri(appUrl), appKey, null, hijack);
 
             // Ensure properties are copied over
             Assert.AreEqual(appUrl, service.ApplicationUri.ToString());
@@ -97,8 +97,7 @@ namespace Microsoft.WindowsAzure.MobileServices.Test
             ComplexDelegatingHandler firstHandler = new ComplexDelegatingHandler(firstBeforeMessage, firstAfterMessage);
             ComplexDelegatingHandler secondHandler = new ComplexDelegatingHandler(secondBeforeMessage, secondAfterMessage);
 
-            IMobileServiceClient service =
-                new MobileServiceClient(new Uri(appUrl), appKey, firstHandler, secondHandler, hijack);
+            IMobileServiceClient service = new MobileServiceClient(new Uri(appUrl), appKey, null, firstHandler, secondHandler, hijack);
 
             // Validate that handlers are properly chained
             Assert.AreSame(hijack, secondHandler.InnerHandler);
@@ -122,7 +121,7 @@ namespace Microsoft.WindowsAzure.MobileServices.Test
         [TestMethod]
         public void Logout()
         {
-            MobileServiceClient service = new MobileServiceClient("http://www.test.com", "secret...");
+            MobileServiceClient service = new MobileServiceClient(new Uri("http://www.test.com"), "secret...", null);
             service.CurrentUser = new MobileServiceUser("123456");
             Assert.IsNotNull(service.CurrentUser);
 
@@ -139,7 +138,7 @@ namespace Microsoft.WindowsAzure.MobileServices.Test
             string query = "$filter=id eq 12";
 
             TestHttpHandler hijack = new TestHttpHandler();
-            IMobileServiceClient service = new MobileServiceClient(appUrl, appKey, hijack);
+            IMobileServiceClient service = new MobileServiceClient(new Uri(appUrl), appKey, null, hijack);
             service.CurrentUser = new MobileServiceUser("someUser");
             service.CurrentUser.MobileServiceAuthenticationToken = "Not rhubarb";
 
