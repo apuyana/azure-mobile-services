@@ -2,16 +2,17 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // ----------------------------------------------------------------------------
 
+using Microsoft.Phone.Controls;
+using Microsoft.Phone.Shell;
+using Microsoft.WindowsAzure.Mobile.SQLite;
+using Microsoft.WindowsAzure.MobileServices.SQLiteStore.Test.Resources;
+using Microsoft.WindowsAzure.MobileServices.SQLiteStore.Test.UnitTests;
+using Microsoft.WindowsAzure.MobileServices.TestFramework;
 using System;
 using System.Diagnostics;
 using System.Windows;
 using System.Windows.Markup;
 using System.Windows.Navigation;
-using Microsoft.Phone.Controls;
-using Microsoft.Phone.Shell;
-using Microsoft.WindowsAzure.MobileServices.SQLiteStore.Test.Resources;
-using Microsoft.WindowsAzure.MobileServices.SQLiteStore.Test.UnitTests;
-using Microsoft.WindowsAzure.MobileServices.TestFramework;
 
 namespace Microsoft.WindowsAzure.MobileServices.SQLiteStore.Test
 {
@@ -42,6 +43,8 @@ namespace Microsoft.WindowsAzure.MobileServices.SQLiteStore.Test
         /// </summary>
         public App()
         {
+            Microsoft.WindowsAzure.Mobile.SQLite.CrossConnection.Instance.Init();
+
             // Global handler for uncaught exceptions.
             UnhandledException += Application_UnhandledException;
 
@@ -73,7 +76,6 @@ namespace Microsoft.WindowsAzure.MobileServices.SQLiteStore.Test
                 // and consume battery power when the user is not using the phone.
                 PhoneApplicationService.Current.UserIdleDetectionMode = IdleDetectionMode.Disabled;
             }
-
         }
 
         // Code to execute when the application is launching (eg, from Start)
@@ -181,7 +183,7 @@ namespace Microsoft.WindowsAzure.MobileServices.SQLiteStore.Test
             }
         }
 
-        #endregion
+        #endregion Phone application initialization
 
         // Initialize the app's font and flow direction as defined in its localized resource strings.
         //

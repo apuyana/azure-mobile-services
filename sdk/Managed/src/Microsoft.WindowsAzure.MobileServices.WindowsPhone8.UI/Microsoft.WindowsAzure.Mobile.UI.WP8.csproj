@@ -59,7 +59,6 @@
     </Compile>
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Authentication\AuthenticationBroker.cs" />
-    <Compile Include="SQLite\CrossConnectionExtension.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Microsoft.WindowsAzure.MobileServices.WindowsPhone8\Microsoft.WindowsAzure.Mobile.Ext.WP8.csproj">
