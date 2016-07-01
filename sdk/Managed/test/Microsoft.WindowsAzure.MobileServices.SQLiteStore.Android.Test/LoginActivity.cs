@@ -1,11 +1,11 @@
-﻿using System;
-using System.Threading.Tasks;
-using Android.App;
+﻿using Android.App;
 using Android.Content;
 using Android.OS;
 using Android.Preferences;
 using Android.Widget;
-using Microsoft.WindowsAzure.MobileServices;
+using Microsoft.WindowsAzure.Mobile.SQLite;
+using System;
+using System.Threading.Tasks;
 
 namespace Microsoft.WindowsAzure.Mobile.SQLiteStore.Android.Test
 {
@@ -16,24 +16,26 @@ namespace Microsoft.WindowsAzure.Mobile.SQLiteStore.Android.Test
 
         private EditText tagsText;
 
-        protected override void OnCreate (Bundle bundle)
+        protected override void OnCreate(Bundle bundle)
         {
-            base.OnCreate (bundle);
-            SetContentView (Resource.Layout.Login);
+            SQLite.CrossConnection.Instance.Init();
+            base.OnCreate(bundle);
+            SetContentView(Resource.Layout.Login);
 
-            ISharedPreferences prefs = PreferenceManager.GetDefaultSharedPreferences (this);
-            
-            this.tagsText = FindViewById<EditText> (Resource.Id.ServiceTags);
-            this.tagsText.Text = prefs.GetString (TagsKey, null);
+            ISharedPreferences prefs = PreferenceManager.GetDefaultSharedPreferences(this);
 
-            FindViewById<Button> (Resource.Id.RunTests).Click += OnClickRunTests;
+            this.tagsText = FindViewById<EditText>(Resource.Id.ServiceTags);
+            this.tagsText.Text = prefs.GetString(TagsKey, null);
+
+            FindViewById<Button>(Resource.Id.RunTests).Click += OnClickRunTests;
         }
 
-        private void OnClickRunTests (object sender, EventArgs eventArgs)
+        private void OnClickRunTests(object sender, EventArgs eventArgs)
         {
-            using (ISharedPreferences prefs = PreferenceManager.GetDefaultSharedPreferences (this))
-            using (ISharedPreferencesEditor editor = prefs.Edit()) {
-                editor.PutString (TagsKey, this.tagsText.Text);
+            using (ISharedPreferences prefs = PreferenceManager.GetDefaultSharedPreferences(this))
+            using (ISharedPreferencesEditor editor = prefs.Edit())
+            {
+                editor.PutString(TagsKey, this.tagsText.Text);
 
                 editor.Commit();
             }
@@ -47,10 +49,10 @@ namespace Microsoft.WindowsAzure.Mobile.SQLiteStore.Android.Test
                 App.Harness.Settings.TagExpression = "!notXamarin";
             }
 
-            Task.Factory.StartNew (App.Harness.RunAsync);
+            Task.Factory.StartNew(App.Harness.RunAsync);
 
-            Intent intent = new Intent (this, typeof (HarnessActivity));
-            StartActivity (intent);
+            Intent intent = new Intent(this, typeof(HarnessActivity));
+            StartActivity(intent);
         }
     }
 }

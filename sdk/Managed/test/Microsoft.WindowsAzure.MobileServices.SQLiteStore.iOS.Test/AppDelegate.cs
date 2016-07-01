@@ -1,36 +1,35 @@
-﻿using System.Reflection;
+﻿using Foundation;
+using Microsoft.WindowsAzure.Mobile.SQLite;
 using Microsoft.WindowsAzure.MobileServices;
 using Microsoft.WindowsAzure.MobileServices.SQLiteStore.Test.UnitTests;
-using Microsoft.WindowsAzure.MobileServices.Test;
 using Microsoft.WindowsAzure.MobileServices.TestFramework;
-using Foundation;
 using UIKit;
 
 namespace Microsoft.WindowsAzure.Mobile.SQLiteStore.iOS.Test
 {
-	[Register("AppDelegate")]
-	public partial class AppDelegate : UIApplicationDelegate
-	{
-		UIWindow window;
+    [Register("AppDelegate")]
+    public partial class AppDelegate : UIApplicationDelegate
+    {
+        private UIWindow window;
 
-	    public static TestHarness Harness { get; private set; }
-
-	    static AppDelegate()
-	    {
+        static AppDelegate()
+        {
+            SQLite.CrossConnection.Instance.Init();
             CurrentPlatform.Init();
-            SQLitePCL.CurrentPlatform.Init();
 
-	        Harness = new TestHarness();
+            Harness = new TestHarness();
             Harness.LoadTestAssembly(typeof(SQLiteStoreTests).Assembly);
-	    }
+        }
 
-		public override bool FinishedLaunching (UIApplication app, NSDictionary options)
-		{
-			window = new UIWindow (UIScreen.MainScreen.Bounds);
-		    window.RootViewController = new UINavigationController (new LoginViewController());
-			window.MakeKeyAndVisible();
+        public static TestHarness Harness { get; private set; }
 
-			return true;
-		}
-	}
+        public override bool FinishedLaunching(UIApplication app, NSDictionary options)
+        {
+            window = new UIWindow(UIScreen.MainScreen.Bounds);
+            window.RootViewController = new UINavigationController(new LoginViewController());
+            window.MakeKeyAndVisible();
+
+            return true;
+        }
+    }
 }

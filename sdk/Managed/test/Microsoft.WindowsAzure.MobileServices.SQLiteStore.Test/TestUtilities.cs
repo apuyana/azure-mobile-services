@@ -4,14 +4,14 @@
 
 using System;
 using Microsoft.WindowsAzure.MobileServices.Sync;
-using SQLitePCL;
+using SQLite.Net;
 
 namespace Microsoft.WindowsAzure.MobileServices.SQLiteStore.Test
 {
     internal class TestUtilities
     {
         public static void ResetDatabase(string dbName)
-        {            
+        {
             TestUtilities.DropTestTable(dbName, MobileServiceLocalSystemTables.OperationQueue);
             TestUtilities.DropTestTable(dbName, MobileServiceLocalSystemTables.SyncErrors);
             TestUtilities.DropTestTable(dbName, MobileServiceLocalSystemTables.Config);
@@ -25,15 +25,14 @@ namespace Microsoft.WindowsAzure.MobileServices.SQLiteStore.Test
         public static long CountRows(string dbName, string tableName)
         {
             long count;
-            using (var connection = new SQLiteConnection(dbName))
-            {
-                using (var statement = connection.Prepare("SELECT COUNT(1) from " + tableName))
-                {
-                    statement.Step();
+            string sql = "SELECT COUNT(1) from " + tableName;
 
-                    count = (long)statement[0];
-                }
+            using (var connection = new SQLiteConnection(Mobile.SQLite.CrossConnection.Current, dbName))
+            {
+                var command = connection.CreateCommand(sql);
+                count = command.ExecuteScalar<int>();
             }
+
             return count;
         }
 
@@ -44,15 +43,10 @@ namespace Microsoft.WindowsAzure.MobileServices.SQLiteStore.Test
 
         public static void ExecuteNonQuery(string dbName, string sql)
         {
-            using (var connection = new SQLiteConnection(dbName))
+            using (var connection = new SQLiteConnection(Mobile.SQLite.CrossConnection.Current, dbName))
             {
-                using (var statement = connection.Prepare(sql))
-                {
-                    if (statement.Step() != SQLiteResult.DONE)
-                    {
-                        throw new InvalidOperationException();
-                    }
-                }
+                var command = connection.CreateCommand(sql);
+                command.ExecuteNonQuery();
             }
         }
     }

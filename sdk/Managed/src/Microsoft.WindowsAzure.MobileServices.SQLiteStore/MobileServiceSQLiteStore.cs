@@ -2,16 +2,18 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // ----------------------------------------------------------------------------
 
-using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Microsoft.WindowsAzure.MobileServices.Query;
 using Microsoft.WindowsAzure.MobileServices.Sync;
 using Newtonsoft.Json.Linq;
-using SQLitePCL;
+using SQLite.Net;
+using SQLite.Net.Interop;
+using System;
+using System.Collections.Generic;
+using System.Globalization;
+using System.Linq;
+using System.Reflection;
+using System.Text;
+using System.Threading.Tasks;
 
 namespace Microsoft.WindowsAzure.MobileServices.SQLiteStore
 {
@@ -21,16 +23,31 @@ namespace Microsoft.WindowsAzure.MobileServices.SQLiteStore
     public class MobileServiceSQLiteStore : MobileServiceLocalStore
     {
         /// <summary>
+        /// Datetime format.
+        /// </summary>
+        private const string DateTimeFormat = "yyyy-MM-ddTHH:mm:ss.fffffffZ";
+
+        /// <summary>
         /// The maximum number of parameters allowed in any "upsert" prepared statement.
         /// Note: The default maximum number of parameters allowed by sqlite is 999
         /// See: http://www.sqlite.org/limits.html#max_variable_number
         /// </summary>
         private const int MaxParametersPerQuery = 800;
 
-        private Dictionary<string, TableDefinition> tableMap = new Dictionary<string, TableDefinition>(StringComparer.OrdinalIgnoreCase);
+        /// <summary>
+        /// Pointer to negative.
+        /// </summary>
+        private static readonly IntPtr NegativePointer = new IntPtr(-1);
+
+        /// <summary>
+        /// Sql connection.
+        /// </summary>
         private SQLiteConnection connection;
 
-        protected MobileServiceSQLiteStore() { }
+        /// <summary>
+        /// Table map.
+        /// </summary>
+        private Dictionary<string, TableDefinition> tableMap = new Dictionary<string, TableDefinition>(StringComparer.OrdinalIgnoreCase);
 
         /// <summary>
         /// Initializes a new instance of <see cref="MobileServiceSQLiteStore"/>
@@ -43,7 +60,23 @@ namespace Microsoft.WindowsAzure.MobileServices.SQLiteStore
                 throw new ArgumentNullException("fileName");
             }
 
-            this.connection = new SQLiteConnection(fileName);
+            this.connection = new SQLiteConnection(SQLitePlatform, fileName);
+        }
+
+        /// <summary>
+        /// Default constructor.
+        /// </summary>
+        protected MobileServiceSQLiteStore() { }
+
+        /// <summary>
+        /// Sqlite platform.
+        /// </summary>
+        protected virtual ISQLitePlatform SQLitePlatform
+        {
+            get
+            {
+                return Mobile.SQLite.CrossConnection.Current;
+            }
         }
 
         /// <summary>
@@ -82,116 +115,6 @@ namespace Microsoft.WindowsAzure.MobileServices.SQLiteStore
             var sysProperties = GetSystemProperties(item);
 
             this.tableMap.Add(tableName, new TableDefinition(tableDefinition, sysProperties));
-        }
-
-        protected override async Task OnInitialize()
-        {
-            this.CreateAllTables();
-            await this.InitializeConfig();
-        }
-
-        /// <summary>
-        /// Reads data from local store by executing the query.
-        /// </summary>
-        /// <param name="query">The query to execute on local store.</param>
-        /// <returns>A task that will return with results when the query finishes.</returns>
-        public override Task<JToken> ReadAsync(MobileServiceTableQueryDescription query)
-        {
-            if (query == null)
-            {
-                throw new ArgumentNullException("query");
-            }
-
-            this.EnsureInitialized();
-
-            var formatter = new SqlQueryFormatter(query);
-            string sql = formatter.FormatSelect();
-
-            IList<JObject> rows = this.ExecuteQuery(query.TableName, sql, formatter.Parameters);
-            JToken result = new JArray(rows.ToArray());
-
-            if (query.IncludeTotalCount)
-            {
-                sql = formatter.FormatSelectCount();
-                IList<JObject> countRows = this.ExecuteQuery(query.TableName, sql, formatter.Parameters);
-                long count = countRows[0].Value<long>("count");
-                result = new JObject() 
-                { 
-                    { "results", result },
-                    { "count", count}
-                };
-            }
-
-            return Task.FromResult(result);
-        }
-
-        /// <summary>
-        /// Updates or inserts data in local table.
-        /// </summary>
-        /// <param name="tableName">Name of the local table.</param>
-        /// <param name="items">A list of items to be inserted.</param>
-        /// <param name="ignoreMissingColumns"><code>true</code> if the extra properties on item can be ignored; <code>false</code> otherwise.</param>
-        /// <returns>A task that completes when item has been upserted in local table.</returns>
-        public override Task UpsertAsync(string tableName, IEnumerable<JObject> items, bool ignoreMissingColumns)
-        {
-            if (tableName == null)
-            {
-                throw new ArgumentNullException("tableName");
-            }
-            if (items == null)
-            {
-                throw new ArgumentNullException("items");
-            }
-
-            this.EnsureInitialized();
-
-            return UpsertAsyncInternal(tableName, items, ignoreMissingColumns);
-        }
-
-        private Task UpsertAsyncInternal(string tableName, IEnumerable<JObject> items, bool ignoreMissingColumns)
-        {
-            TableDefinition table = GetTable(tableName);
-
-            var first = items.FirstOrDefault();
-            if (first == null)
-            {
-                return Task.FromResult(0);
-            }
-
-            // Get the columns which we want to map into the database.
-            var columns = new List<ColumnDefinition>();
-            foreach (var prop in first.Properties())
-            {
-                ColumnDefinition column;
-
-                // If the column is coming from the server we can just ignore it,
-                // otherwise, throw to alert the caller that they have passed an invalid column
-                if (!table.TryGetValue(prop.Name, out column) && !ignoreMissingColumns)
-                {
-                    throw new InvalidOperationException(string.Format(Properties.Resources.SQLiteStore_ColumnNotDefined, prop.Name, tableName));
-                }
-
-                if (column != null)
-                {
-                    columns.Add(column);
-                }
-            }
-
-            if (columns.Count == 0)
-            {
-                // no query to execute if there are no columns in the table
-                return Task.FromResult(0);
-            }
-
-
-            this.ExecuteNonQuery("BEGIN TRANSACTION", null);
-
-            BatchInsert(tableName, items, columns.Where(c => c.Name.Equals(MobileServiceSystemColumns.Id)).Take(1).ToList());
-            BatchUpdate(tableName, items, columns);
-
-            this.ExecuteNonQuery("COMMIT TRANSACTION", null);
-
-            return Task.FromResult(0);
         }
 
         /// <summary>
@@ -284,87 +207,649 @@ namespace Microsoft.WindowsAzure.MobileServices.SQLiteStore
             return Task.FromResult(results.FirstOrDefault());
         }
 
-        private TableDefinition GetTable(string tableName)
+        /// <summary>
+        /// Reads data from local store by executing the query.
+        /// </summary>
+        /// <param name="query">The query to execute on local store.</param>
+        /// <returns>A task that will return with results when the query finishes.</returns>
+        public override Task<JToken> ReadAsync(MobileServiceTableQueryDescription query)
         {
-            TableDefinition table;
-            if (!this.tableMap.TryGetValue(tableName, out table))
+            if (query == null)
             {
-                throw new InvalidOperationException(string.Format(Properties.Resources.SQLiteStore_TableNotDefined, tableName));
+                throw new ArgumentNullException("query");
             }
-            return table;
+
+            this.EnsureInitialized();
+
+            var formatter = new SqlQueryFormatter(query);
+            string sql = formatter.FormatSelect();
+
+            IList<JObject> rows = this.ExecuteQuery(query.TableName, sql, formatter.Parameters);
+            JToken result = new JArray(rows.ToArray());
+
+            if (query.IncludeTotalCount)
+            {
+                sql = formatter.FormatSelectCount();
+                IList<JObject> countRows = this.ExecuteQuery(query.TableName, sql, formatter.Parameters);
+                long count = countRows[0].Value<long>("count");
+                result = new JObject()
+                {
+                    { "results", result },
+                    { "count", count}
+                };
+            }
+
+            return Task.FromResult(result);
+        }
+
+        /// <summary>
+        /// Updates or inserts data in local table.
+        /// </summary>
+        /// <param name="tableName">Name of the local table.</param>
+        /// <param name="items">A list of items to be inserted.</param>
+        /// <param name="ignoreMissingColumns"><code>true</code> if the extra properties on item can be ignored; <code>false</code> otherwise.</param>
+        /// <returns>A task that completes when item has been upserted in local table.</returns>
+        public override Task UpsertAsync(string tableName, IEnumerable<JObject> items, bool ignoreMissingColumns)
+        {
+            if (tableName == null)
+            {
+                throw new ArgumentNullException("tableName");
+            }
+            if (items == null)
+            {
+                throw new ArgumentNullException("items");
+            }
+
+            this.EnsureInitialized();
+
+            return UpsertAsyncInternal(tableName, items, ignoreMissingColumns);
+        }
+
+        /// <summary>
+        /// Bind parameter.
+        /// </summary>
+        /// <param name="isqLite3Api">Api to use.</param>
+        /// <param name="stmt">Statement to use.</param>
+        /// <param name="index">Index to use.</param>
+        /// <param name="value">Value to use.</param>
+        /// <param name="storeDateTimeAsTicks">Format for date.</param>
+        /// <param name="serializer">Serializer.</param>
+        internal static void BindParameter(ISQLiteApi isqLite3Api, IDbStatement stmt, int index, object value, bool storeDateTimeAsTicks,
+            IBlobSerializer serializer)
+        {
+            if (value == null)
+            {
+                isqLite3Api.BindNull(stmt, index);
+            }
+            else
+            {
+                if (value is int)
+                {
+                    isqLite3Api.BindInt(stmt, index, (int)value);
+                }
+                else if (value is ISerializable<int>)
+                {
+                    isqLite3Api.BindInt(stmt, index, ((ISerializable<int>)value).Serialize());
+                }
+                else if (value is string)
+                {
+                    isqLite3Api.BindText16(stmt, index, (string)value, -1, NegativePointer);
+                }
+                else if (value is ISerializable<string>)
+                {
+                    isqLite3Api.BindText16(stmt, index, ((ISerializable<string>)value).Serialize(), -1, NegativePointer);
+                }
+                else if (value is byte || value is ushort || value is sbyte || value is short)
+                {
+                    isqLite3Api.BindInt(stmt, index, Convert.ToInt32(value));
+                }
+                else if (value is ISerializable<byte>)
+                {
+                    isqLite3Api.BindInt(stmt, index, Convert.ToInt32(((ISerializable<byte>)value).Serialize()));
+                }
+                else if (value is ISerializable<ushort>)
+                {
+                    isqLite3Api.BindInt(stmt, index, Convert.ToInt32(((ISerializable<ushort>)value).Serialize()));
+                }
+                else if (value is ISerializable<sbyte>)
+                {
+                    isqLite3Api.BindInt(stmt, index, Convert.ToInt32(((ISerializable<sbyte>)value).Serialize()));
+                }
+                else if (value is ISerializable<short>)
+                {
+                    isqLite3Api.BindInt(stmt, index, Convert.ToInt32(((ISerializable<short>)value).Serialize()));
+                }
+                else if (value is bool)
+                {
+                    isqLite3Api.BindInt(stmt, index, (bool)value ? 1 : 0);
+                }
+                else if (value is ISerializable<bool>)
+                {
+                    isqLite3Api.BindInt(stmt, index, ((ISerializable<bool>)value).Serialize() ? 1 : 0);
+                }
+                else if (value is uint || value is long)
+                {
+                    isqLite3Api.BindInt64(stmt, index, Convert.ToInt64(value));
+                }
+                else if (value is ISerializable<uint>)
+                {
+                    isqLite3Api.BindInt64(stmt, index, Convert.ToInt64(((ISerializable<uint>)value).Serialize()));
+                }
+                else if (value is ISerializable<long>)
+                {
+                    isqLite3Api.BindInt64(stmt, index, Convert.ToInt64(((ISerializable<long>)value).Serialize()));
+                }
+                else if (value is float || value is double || value is decimal)
+                {
+                    isqLite3Api.BindDouble(stmt, index, Convert.ToDouble(value));
+                }
+                else if (value is ISerializable<float>)
+                {
+                    isqLite3Api.BindDouble(stmt, index, Convert.ToDouble(((ISerializable<float>)value).Serialize()));
+                }
+                else if (value is ISerializable<double>)
+                {
+                    isqLite3Api.BindDouble(stmt, index, Convert.ToDouble(((ISerializable<double>)value).Serialize()));
+                }
+                else if (value is ISerializable<decimal>)
+                {
+                    isqLite3Api.BindDouble(stmt, index, Convert.ToDouble(((ISerializable<decimal>)value).Serialize()));
+                }
+                else if (value is TimeSpan)
+                {
+                    isqLite3Api.BindInt64(stmt, index, ((TimeSpan)value).Ticks);
+                }
+                else if (value is ISerializable<TimeSpan>)
+                {
+                    isqLite3Api.BindInt64(stmt, index, ((ISerializable<TimeSpan>)value).Serialize().Ticks);
+                }
+                else if (value is DateTime)
+                {
+                    if (storeDateTimeAsTicks)
+                    {
+                        long ticks = ((DateTime)value).ToUniversalTime().Ticks;
+                        isqLite3Api.BindInt64(stmt, index, ticks);
+                    }
+                    else
+                    {
+                        string val = ((DateTime)value).ToUniversalTime().ToString(DateTimeFormat, CultureInfo.InvariantCulture);
+                        isqLite3Api.BindText16(stmt, index, val, -1, NegativePointer);
+                    }
+                }
+                else if (value is DateTimeOffset)
+                {
+                    isqLite3Api.BindInt64(stmt, index, ((DateTimeOffset)value).UtcTicks);
+                }
+                else if (value is ISerializable<DateTime>)
+                {
+                    if (storeDateTimeAsTicks)
+                    {
+                        long ticks = ((ISerializable<DateTime>)value).Serialize().ToUniversalTime().Ticks;
+                        isqLite3Api.BindInt64(stmt, index, ticks);
+                    }
+                    else
+                    {
+                        string val = ((ISerializable<DateTime>)value).Serialize().ToUniversalTime().ToString(DateTimeFormat, CultureInfo.InvariantCulture);
+                        isqLite3Api.BindText16(stmt, index, val, -1, NegativePointer);
+                    }
+                }
+                else if (value.GetType().GetTypeInfo().IsEnum)
+                {
+                    isqLite3Api.BindInt(stmt, index, Convert.ToInt32(value));
+                }
+                else if (value is byte[])
+                {
+                    isqLite3Api.BindBlob(stmt, index, (byte[])value, ((byte[])value).Length, NegativePointer);
+                }
+                else if (value is ISerializable<byte[]>)
+                {
+                    isqLite3Api.BindBlob(stmt, index, ((ISerializable<byte[]>)value).Serialize(), ((ISerializable<byte[]>)value).Serialize().Length,
+                        NegativePointer);
+                }
+                else if (value is Guid)
+                {
+                    isqLite3Api.BindText16(stmt, index, ((Guid)value).ToString(), 72, NegativePointer);
+                }
+                else if (value is ISerializable<Guid>)
+                {
+                    isqLite3Api.BindText16(stmt, index, ((ISerializable<Guid>)value).Serialize().ToString(), 72, NegativePointer);
+                }
+                else if (serializer != null && serializer.CanDeserialize(value.GetType()))
+                {
+                    var bytes = serializer.Serialize(value);
+                    isqLite3Api.BindBlob(stmt, index, bytes, bytes.Length, NegativePointer);
+                }
+                else
+                {
+                    throw new NotSupportedException("Cannot store type: " + value.GetType());
+                }
+            }
+        }
+
+        internal virtual void CreateTableFromObject(string tableName, IEnumerable<ColumnDefinition> columns)
+        {
+            ColumnDefinition idColumn = columns.FirstOrDefault(c => c.Name.Equals(MobileServiceSystemColumns.Id));
+            var colDefinitions = columns.Where(c => c != idColumn).Select(c => String.Format("{0} {1}", SqlHelpers.FormatMember(c.Name), c.StoreType)).ToList();
+            if (idColumn != null)
+            {
+                colDefinitions.Insert(0, String.Format("{0} {1} PRIMARY KEY", SqlHelpers.FormatMember(idColumn.Name), idColumn.StoreType));
+            }
+
+            String tblSql = string.Format("CREATE TABLE IF NOT EXISTS {0} ({1})", SqlHelpers.FormatTableName(tableName), String.Join(", ", colDefinitions));
+            this.ExecuteNonQuery(tblSql, parameters: null);
+
+            string infoSql = string.Format("PRAGMA table_info({0});", SqlHelpers.FormatTableName(tableName));
+            IDictionary<string, JObject> existingColumns = this.ExecuteQuery((TableDefinition)null, infoSql, parameters: null)
+                                                               .ToDictionary(c => c.Value<string>("name"), StringComparer.OrdinalIgnoreCase);
+
+            // new columns that do not exist in existing columns
+            var columnsToCreate = columns.Where(c => !existingColumns.ContainsKey(c.Name));
+
+            foreach (ColumnDefinition column in columnsToCreate)
+            {
+                string createSql = string.Format("ALTER TABLE {0} ADD COLUMN {1} {2}",
+                                                 SqlHelpers.FormatTableName(tableName),
+                                                 SqlHelpers.FormatMember(column.Name),
+                                                 column.StoreType);
+                this.ExecuteNonQuery(createSql, parameters: null);
+            }
+
+            // NOTE: In SQLite you cannot drop columns, only add them.
         }
 
         internal virtual async Task SaveSetting(string name, string value)
         {
-            var setting = new JObject() 
-            { 
-                { "id", name }, 
-                { "value", value } 
+            var setting = new JObject()
+            {
+                { "id", name },
+                { "value", value }
             };
             await this.UpsertAsyncInternal(MobileServiceLocalSystemTables.Config, new[] { setting }, ignoreMissingColumns: false);
         }
 
-        private async Task InitializeConfig()
+        protected override void Dispose(bool disposing)
         {
-            foreach (KeyValuePair<string, TableDefinition> table in this.tableMap)
+            if (disposing)
             {
-                if (!MobileServiceLocalSystemTables.All.Contains(table.Key))
-                {
-                    // preserve system properties setting for non-system tables
-                    string name = String.Format("systemProperties|{0}", table.Key);
-                    string value = ((int)table.Value.SystemProperties).ToString();
-                    await this.SaveSetting(name, value);
-                }
+                this.connection.Dispose();
             }
         }
 
-        private void CreateAllTables()
+        /// <summary>
+        /// Executes a sql statement on a given table in local SQLite database.
+        /// </summary>
+        /// <param name="tableName">The name of the table.</param>
+        /// <param name="parameters">The query parameters.</param>
+        protected virtual void ExecuteNonQuery(string sql, IDictionary<string, object> parameters)
         {
-            foreach (KeyValuePair<string, TableDefinition> table in this.tableMap)
+            try
             {
-                this.CreateTableFromObject(table.Key, table.Value.Values);
-            }
-        }
+                parameters = parameters ?? new Dictionary<string, object>();
 
-        private void BatchUpdate(string tableName, IEnumerable<JObject> items, List<ColumnDefinition> columns)
-        {
-            if (columns.Count <= 1)
-            {
-                return; // For update to work there has to be at least once column besides Id that needs to be updated
-            }
+                var command = connection.CreateCommand(sql);
 
-            ValidateParameterCount(columns.Count);
-
-            string sqlBase = String.Format("UPDATE {0} SET ", SqlHelpers.FormatTableName(tableName));
-
-            foreach (JObject item in items)
-            {
-                var sql = new StringBuilder(sqlBase);
-                var parameters = new Dictionary<string, object>();
-
-                ColumnDefinition idColumn = columns.FirstOrDefault(c => c.Name.Equals(MobileServiceSystemColumns.Id));
-                if (idColumn == null)
+                foreach (KeyValuePair<string, object> parameter in parameters)
                 {
-                    continue;
+                    command.Bind(parameter.Key, parameter.Value);
                 }
 
-                foreach (var column in columns.Where(c => c != idColumn))
-                {
-                    string paramName = AddParameter(item, parameters, column);
+                int result = command.ExecuteNonQuery();
+            }
+            catch (Exception ex)
+            {
+                // throw new SQLiteException(string.Format(Properties.Resources.SQLiteStore_QueryExecutionFailed, "fail"), ex);
+            }
 
-                    sql.AppendFormat("{0} = {1}", SqlHelpers.FormatMember(column.Name), paramName);
+            // throw new SQLiteException(string.Format(Properties.Resources.SQLiteStore_QueryExecutionFailed, result));
+        }
+
+        /// <summary>
+        /// Executes a sql statement on a given table in local SQLite database.
+        /// </summary>
+        /// <param name="tableName">The name of the table.</param>
+        /// <param name="sql">The SQL query to execute.</param>
+        /// <param name="parameters">The query parameters.</param>
+        /// <returns>The result of query.</returns>
+        protected virtual IList<JObject> ExecuteQuery(string tableName, string sql, IDictionary<string, object> parameters)
+        {
+            TableDefinition table = GetTable(tableName);
+            return this.ExecuteQuery(table, sql, parameters);
+        }
+
+        protected override async Task OnInitialize()
+        {
+            this.CreateAllTables();
+            await this.InitializeConfig();
+        }
+
+        private static string AddParameter(JObject item, Dictionary<string, object> parameters, ColumnDefinition column)
+        {
+            JToken rawValue = item.GetValue(column.Name, StringComparison.OrdinalIgnoreCase);
+            object value = SqlHelpers.SerializeValue(rawValue, column.StoreType, column.JsonType);
+            string paramName = CreateParameter(parameters, value);
+            return paramName;
+        }
+
+        private static void AppendInsertValuesSql(StringBuilder sql, Dictionary<string, object> parameters, List<ColumnDefinition> columns, JObject item)
+        {
+            sql.Append("(");
+            int colCount = 0;
+            foreach (var column in columns)
+            {
+                if (colCount > 0)
                     sql.Append(",");
-                }
 
-                if (parameters.Any())
+                sql.Append(AddParameter(item, parameters, column));
+
+                colCount++;
+            }
+            sql.Append(")");
+        }
+
+        private static string CreateParameter(Dictionary<string, object> parameters, object value)
+        {
+            string paramName = "@p" + parameters.Count;
+            parameters[paramName] = value;
+            return paramName;
+        }
+
+        private static MobileServiceSystemProperties GetSystemProperties(JObject item)
+        {
+            var sysProperties = MobileServiceSystemProperties.None;
+
+            if (item[MobileServiceSystemColumns.Version] != null)
+            {
+                sysProperties = sysProperties | MobileServiceSystemProperties.Version;
+            }
+            if (item[MobileServiceSystemColumns.CreatedAt] != null)
+            {
+                sysProperties = sysProperties | MobileServiceSystemProperties.CreatedAt;
+            }
+            if (item[MobileServiceSystemColumns.UpdatedAt] != null)
+            {
+                sysProperties = sysProperties | MobileServiceSystemProperties.UpdatedAt;
+            }
+            if (item[MobileServiceSystemColumns.Deleted] != null)
+            {
+                sysProperties = sysProperties | MobileServiceSystemProperties.Deleted;
+            }
+            return sysProperties;
+        }
+
+        /// <summary>
+        /// Read column.
+        /// </summary>
+        /// <param name="connection">Connection to use.</param>
+        /// <param name="stmt">Statement to use.</param>
+        /// <param name="index">Index to use.</param>
+        /// <param name="type">Type to use.</param>
+        /// <param name="clrType">Type to use.</param>
+        /// <returns>Object read.</returns>
+        private static object ReadCol(SQLiteConnection connection, IDbStatement stmt, int index, ColType type, Type clrType)
+        {
+            var interfaces = clrType.GetTypeInfo().ImplementedInterfaces.ToList();
+
+            if (type == ColType.Null)
+            {
+                return null;
+            }
+            if (clrType == typeof(string))
+            {
+                return connection.Platform.SQLiteApi.ColumnText16(stmt, index);
+            }
+            if (interfaces.Contains(typeof(ISerializable<string>)))
+            {
+                var value = connection.Platform.SQLiteApi.ColumnText16(stmt, index);
+                return connection.Resolver.CreateObject(clrType, new object[] { value });
+            }
+            if (clrType == typeof(int))
+            {
+                return connection.Platform.SQLiteApi.ColumnInt(stmt, index);
+            }
+            if (interfaces.Contains(typeof(ISerializable<int>)))
+            {
+                var value = connection.Platform.SQLiteApi.ColumnInt(stmt, index);
+                return connection.Resolver.CreateObject(clrType, new object[] { value });
+            }
+            if (clrType == typeof(bool))
+            {
+                return connection.Platform.SQLiteApi.ColumnInt(stmt, index) == 1;
+            }
+            if (interfaces.Contains(typeof(ISerializable<bool>)))
+            {
+                var value = connection.Platform.SQLiteApi.ColumnInt(stmt, index) == 1;
+                return connection.Resolver.CreateObject(clrType, new object[] { value });
+            }
+            if (clrType == typeof(double))
+            {
+                return connection.Platform.SQLiteApi.ColumnDouble(stmt, index);
+            }
+            if (interfaces.Contains(typeof(ISerializable<double>)))
+            {
+                var value = connection.Platform.SQLiteApi.ColumnDouble(stmt, index);
+                return connection.Resolver.CreateObject(clrType, new object[] { value });
+            }
+            if (clrType == typeof(float))
+            {
+                return (float)connection.Platform.SQLiteApi.ColumnDouble(stmt, index);
+            }
+            if (interfaces.Contains(typeof(ISerializable<float>)))
+            {
+                var value = (float)connection.Platform.SQLiteApi.ColumnDouble(stmt, index);
+                return connection.Resolver.CreateObject(clrType, new object[] { value });
+            }
+            if (clrType == typeof(TimeSpan))
+            {
+                return new TimeSpan(connection.Platform.SQLiteApi.ColumnInt64(stmt, index));
+            }
+            if (interfaces.Contains(typeof(ISerializable<TimeSpan>)))
+            {
+                var value = new TimeSpan(connection.Platform.SQLiteApi.ColumnInt64(stmt, index));
+                return connection.Resolver.CreateObject(clrType, new object[] { value });
+            }
+            if (clrType == typeof(DateTime))
+            {
+                if (connection.StoreDateTimeAsTicks)
                 {
-                    sql.Remove(sql.Length - 1, 1); // remove the trailing comma
-
+                    return new DateTime(connection.Platform.SQLiteApi.ColumnInt64(stmt, index), DateTimeKind.Utc);
                 }
+                return DateTime.Parse(connection.Platform.SQLiteApi.ColumnText16(stmt, index), CultureInfo.InvariantCulture);
+            }
+            if (clrType == typeof(DateTimeOffset))
+            {
+                return new DateTimeOffset(connection.Platform.SQLiteApi.ColumnInt64(stmt, index), TimeSpan.Zero);
+            }
+            if (interfaces.Contains(typeof(ISerializable<DateTime>)))
+            {
+                DateTime value;
+                if (connection.StoreDateTimeAsTicks)
+                {
+                    value = new DateTime(connection.Platform.SQLiteApi.ColumnInt64(stmt, index), DateTimeKind.Utc);
+                }
+                else
+                {
+                    value = DateTime.Parse(connection.Platform.SQLiteApi.ColumnText16(stmt, index), CultureInfo.InvariantCulture);
+                }
+                return Activator.CreateInstance(clrType, value);
+            }
+            if (clrType.GetTypeInfo().IsEnum)
+            {
+                return connection.Platform.SQLiteApi.ColumnInt(stmt, index);
+            }
+            if (clrType == typeof(long))
+            {
+                return connection.Platform.SQLiteApi.ColumnInt64(stmt, index);
+            }
+            if (interfaces.Contains(typeof(ISerializable<long>)))
+            {
+                var value = connection.Platform.SQLiteApi.ColumnInt64(stmt, index);
+                return connection.Resolver.CreateObject(clrType, new object[] { value });
+            }
+            if (clrType == typeof(uint))
+            {
+                return (uint)connection.Platform.SQLiteApi.ColumnInt64(stmt, index);
+            }
+            if (interfaces.Contains(typeof(ISerializable<long>)))
+            {
+                var value = (uint)connection.Platform.SQLiteApi.ColumnInt64(stmt, index);
+                return connection.Resolver.CreateObject(clrType, new object[] { value });
+            }
+            if (clrType == typeof(decimal))
+            {
+                return (decimal)connection.Platform.SQLiteApi.ColumnDouble(stmt, index);
+            }
+            if (interfaces.Contains(typeof(ISerializable<decimal>)))
+            {
+                var value = (decimal)connection.Platform.SQLiteApi.ColumnDouble(stmt, index);
+                return connection.Resolver.CreateObject(clrType, new object[] { value });
+            }
+            if (clrType == typeof(byte))
+            {
+                return (byte)connection.Platform.SQLiteApi.ColumnInt(stmt, index);
+            }
+            if (interfaces.Contains(typeof(ISerializable<byte>)))
+            {
+                var value = (byte)connection.Platform.SQLiteApi.ColumnInt(stmt, index);
+                return connection.Resolver.CreateObject(clrType, new object[] { value });
+            }
+            if (clrType == typeof(ushort))
+            {
+                return (ushort)connection.Platform.SQLiteApi.ColumnInt(stmt, index);
+            }
+            if (interfaces.Contains(typeof(ISerializable<ushort>)))
+            {
+                var value = (ushort)connection.Platform.SQLiteApi.ColumnInt(stmt, index);
+                return connection.Resolver.CreateObject(clrType, new object[] { value });
+            }
+            if (clrType == typeof(short))
+            {
+                return (short)connection.Platform.SQLiteApi.ColumnInt(stmt, index);
+            }
+            if (interfaces.Contains(typeof(ISerializable<short>)))
+            {
+                var value = (short)connection.Platform.SQLiteApi.ColumnInt(stmt, index);
+                return connection.Resolver.CreateObject(clrType, new object[] { value });
+            }
+            if (clrType == typeof(sbyte))
+            {
+                return (sbyte)connection.Platform.SQLiteApi.ColumnInt(stmt, index);
+            }
+            if (interfaces.Contains(typeof(ISerializable<sbyte>)))
+            {
+                var value = (sbyte)connection.Platform.SQLiteApi.ColumnInt(stmt, index);
+                return connection.Resolver.CreateObject(clrType, new object[] { value });
+            }
+            if (clrType == typeof(byte[]))
+            {
+                return connection.Platform.SQLiteApi.ColumnByteArray(stmt, index);
+            }
+            if (interfaces.Contains(typeof(ISerializable<byte[]>)))
+            {
+                var value = connection.Platform.SQLiteApi.ColumnByteArray(stmt, index);
+                return connection.Resolver.CreateObject(clrType, new object[] { value });
+            }
+            if (clrType == typeof(Guid))
+            {
+                return new Guid(connection.Platform.SQLiteApi.ColumnText16(stmt, index));
+            }
+            if (interfaces.Contains(typeof(ISerializable<Guid>)))
+            {
+                var value = new Guid(connection.Platform.SQLiteApi.ColumnText16(stmt, index));
+                return connection.Resolver.CreateObject(clrType, new object[] { value });
+            }
+            if (connection.Serializer != null && connection.Serializer.CanDeserialize(clrType))
+            {
+                var bytes = connection.Platform.SQLiteApi.ColumnByteArray(stmt, index);
+                return connection.Serializer.Deserialize(bytes, clrType);
+            }
+            throw new NotSupportedException("Don't know how to read " + clrType);
+        }
 
-                sql.AppendFormat(" WHERE {0} = {1}", SqlHelpers.FormatMember(MobileServiceSystemColumns.Id), AddParameter(item, parameters, idColumn));
+        /// <summary>
+        /// Read column.
+        /// </summary>
+        /// <param name="connection">Connection to use.</param>
+        /// <param name="statement">Statement to use.</param>
+        /// <param name="index">Index to use.</param>
+        /// <returns>Object read.</returns>
+        private static object ReadColumn(SQLiteConnection connection, IDbStatement statement, int index)
+        {
+            object result = null;
 
-                this.ExecuteNonQuery(sql.ToString(), parameters);
+            var sqliteapi = connection.Platform.SQLiteApi;
+
+            ColType type = (ColType)sqliteapi.ColumnType(statement, index);
+
+            switch (type)
+            {
+                case ColType.Integer:
+                    result = sqliteapi.ColumnInt64(statement, index);
+
+                    break;
+
+                case ColType.Float:
+                    result = sqliteapi.ColumnDouble(statement, index);
+
+                    break;
+
+                case ColType.Text:
+                    result = sqliteapi.ColumnText16(statement, index);
+
+                    break;
+
+                case ColType.Blob:
+                    result = sqliteapi.ColumnBlob(statement, index);
+
+                    break;
+
+                case ColType.Null:
+                    break;
+            }
+
+            return result;
+        }
+
+        private static JObject ReadRow(SQLiteConnection connection, TableDefinition table, IDbStatement statement)
+        {
+            var row = new JObject();
+
+            var sqliteApi = connection.Platform.SQLiteApi;
+            var totalColumns = sqliteApi.ColumnCount(statement);
+
+            for (int i = 0; i < totalColumns; i++)
+            {
+                string name = sqliteApi.ColumnName16(statement, i);
+                object value = ReadColumn(connection, statement, i);
+
+                ColumnDefinition column;
+                if (table.TryGetValue(name, out column))
+                {
+                    JToken jVal = SqlHelpers.DeserializeValue(value, column.StoreType, column.JsonType);
+                    row[name] = jVal;
+                }
+                else
+                {
+                    row[name] = value == null ? null : JToken.FromObject(value);
+                }
+            }
+            return row;
+        }
+
+        private static int ValidateParameterCount(int parametersCount)
+        {
+            int batchSize = MaxParametersPerQuery / parametersCount;
+            if (batchSize == 0)
+            {
+                throw new InvalidOperationException(string.Format(Properties.Resources.SQLiteStore_TooManyColumns, MaxParametersPerQuery));
+            }
+            return batchSize;
+        }
+
+        private static void ValidateResult(Result result)
+        {
+            if (result != Result.Done)
+            {
+                throw new InvalidOperationException(string.Format(Properties.Resources.SQLiteStore_QueryExecutionFailed, result));
             }
         }
 
@@ -404,111 +889,53 @@ namespace Microsoft.WindowsAzure.MobileServices.SQLiteStore
             }
         }
 
-        private static int ValidateParameterCount(int parametersCount)
+        private void BatchUpdate(string tableName, IEnumerable<JObject> items, List<ColumnDefinition> columns)
         {
-            int batchSize = MaxParametersPerQuery / parametersCount;
-            if (batchSize == 0)
+            if (columns.Count <= 1)
             {
-                throw new InvalidOperationException(string.Format(Properties.Resources.SQLiteStore_TooManyColumns, MaxParametersPerQuery));
-            }
-            return batchSize;
-        }
-
-        private static void AppendInsertValuesSql(StringBuilder sql, Dictionary<string, object> parameters, List<ColumnDefinition> columns, JObject item)
-        {
-            sql.Append("(");
-            int colCount = 0;
-            foreach (var column in columns)
-            {
-                if (colCount > 0)
-                    sql.Append(",");
-
-                sql.Append(AddParameter(item, parameters, column));
-
-                colCount++;
-            }
-            sql.Append(")");
-        }
-
-        internal virtual void CreateTableFromObject(string tableName, IEnumerable<ColumnDefinition> columns)
-        {
-            ColumnDefinition idColumn = columns.FirstOrDefault(c => c.Name.Equals(MobileServiceSystemColumns.Id));
-            var colDefinitions = columns.Where(c => c != idColumn).Select(c => String.Format("{0} {1}", SqlHelpers.FormatMember(c.Name), c.StoreType)).ToList();
-            if (idColumn != null)
-            {
-                colDefinitions.Insert(0, String.Format("{0} {1} PRIMARY KEY", SqlHelpers.FormatMember(idColumn.Name), idColumn.StoreType));
+                return; // For update to work there has to be at least once column besides Id that needs to be updated
             }
 
-            String tblSql = string.Format("CREATE TABLE IF NOT EXISTS {0} ({1})", SqlHelpers.FormatTableName(tableName), String.Join(", ", colDefinitions));
-            this.ExecuteNonQuery(tblSql, parameters: null);
+            ValidateParameterCount(columns.Count);
 
-            string infoSql = string.Format("PRAGMA table_info({0});", SqlHelpers.FormatTableName(tableName));
-            IDictionary<string, JObject> existingColumns = this.ExecuteQuery((TableDefinition)null, infoSql, parameters: null)
-                                                               .ToDictionary(c => c.Value<string>("name"), StringComparer.OrdinalIgnoreCase);
+            string sqlBase = String.Format("UPDATE {0} SET ", SqlHelpers.FormatTableName(tableName));
 
-            // new columns that do not exist in existing columns
-            var columnsToCreate = columns.Where(c => !existingColumns.ContainsKey(c.Name));
-
-            foreach (ColumnDefinition column in columnsToCreate)
+            foreach (JObject item in items)
             {
-                string createSql = string.Format("ALTER TABLE {0} ADD COLUMN {1} {2}",
-                                                 SqlHelpers.FormatTableName(tableName),
-                                                 SqlHelpers.FormatMember(column.Name),
-                                                 column.StoreType);
-                this.ExecuteNonQuery(createSql, parameters: null);
-            }
+                var sql = new StringBuilder(sqlBase);
+                var parameters = new Dictionary<string, object>();
 
-            // NOTE: In SQLite you cannot drop columns, only add them.
-        }
-
-        private static string AddParameter(JObject item, Dictionary<string, object> parameters, ColumnDefinition column)
-        {
-            JToken rawValue = item.GetValue(column.Name, StringComparison.OrdinalIgnoreCase);
-            object value = SqlHelpers.SerializeValue(rawValue, column.StoreType, column.JsonType);
-            string paramName = CreateParameter(parameters, value);
-            return paramName;
-        }
-
-        private static string CreateParameter(Dictionary<string, object> parameters, object value)
-        {
-            string paramName = "@p" + parameters.Count;
-            parameters[paramName] = value;
-            return paramName;
-        }
-
-        /// <summary>
-        /// Executes a sql statement on a given table in local SQLite database.
-        /// </summary>
-        /// <param name="tableName">The name of the table.</param>
-        /// <param name="parameters">The query parameters.</param>
-        protected virtual void ExecuteNonQuery(string sql, IDictionary<string, object> parameters)
-        {
-            parameters = parameters ?? new Dictionary<string, object>();
-
-
-            using (ISQLiteStatement statement = this.connection.Prepare(sql))
-            {
-                foreach (KeyValuePair<string, object> parameter in parameters)
+                ColumnDefinition idColumn = columns.FirstOrDefault(c => c.Name.Equals(MobileServiceSystemColumns.Id));
+                if (idColumn == null)
                 {
-                    statement.Bind(parameter.Key, parameter.Value);
+                    continue;
                 }
 
-                SQLiteResult result = statement.Step();
-                ValidateResult(result);
+                foreach (var column in columns.Where(c => c != idColumn))
+                {
+                    string paramName = AddParameter(item, parameters, column);
+
+                    sql.AppendFormat("{0} = {1}", SqlHelpers.FormatMember(column.Name), paramName);
+                    sql.Append(",");
+                }
+
+                if (parameters.Any())
+                {
+                    sql.Remove(sql.Length - 1, 1); // remove the trailing comma
+                }
+
+                sql.AppendFormat(" WHERE {0} = {1}", SqlHelpers.FormatMember(MobileServiceSystemColumns.Id), AddParameter(item, parameters, idColumn));
+
+                this.ExecuteNonQuery(sql.ToString(), parameters);
             }
         }
 
-        /// <summary>
-        /// Executes a sql statement on a given table in local SQLite database.
-        /// </summary>
-        /// <param name="tableName">The name of the table.</param>
-        /// <param name="sql">The SQL query to execute.</param>
-        /// <param name="parameters">The query parameters.</param>
-        /// <returns>The result of query.</returns>
-        protected virtual IList<JObject> ExecuteQuery(string tableName, string sql, IDictionary<string, object> parameters)
+        private void CreateAllTables()
         {
-            TableDefinition table = GetTable(tableName);
-            return this.ExecuteQuery(table, sql, parameters);
+            foreach (KeyValuePair<string, TableDefinition> table in this.tableMap)
+            {
+                this.CreateTableFromObject(table.Key, table.Value.Values);
+            }
         }
 
         private IList<JObject> ExecuteQuery(TableDefinition table, string sql, IDictionary<string, object> parameters)
@@ -517,85 +944,106 @@ namespace Microsoft.WindowsAzure.MobileServices.SQLiteStore
             parameters = parameters ?? new Dictionary<string, object>();
 
             var rows = new List<JObject>();
-            using (ISQLiteStatement statement = this.connection.Prepare(sql))
+
+            IDbStatement statement = null;
+
+            try
             {
+                statement = this.connection.Platform.SQLiteApi.Prepare2(connection.Handle, sql);
+
                 foreach (KeyValuePair<string, object> parameter in parameters)
                 {
-                    statement.Bind(parameter.Key, parameter.Value);
+                    var index = this.connection.Platform.SQLiteApi.BindParameterIndex(statement, parameter.Key);
+                    BindParameter(this.connection.Platform.SQLiteApi, statement, index, parameter.Value, connection.StoreDateTimeAsTicks, connection.Serializer);
                 }
 
-                SQLiteResult result;
-                while ((result = statement.Step()) == SQLiteResult.ROW)
+                Result result;
+                while ((result = this.connection.Platform.SQLiteApi.Step(statement)) == Result.Row)
                 {
-                    var row = ReadRow(table, statement);
+                    var row = ReadRow(this.connection, table, statement);
                     rows.Add(row);
                 }
 
                 ValidateResult(result);
             }
+            finally
+            {
+                if (statement != null)
+                {
+                    this.connection.Platform.SQLiteApi.Finalize(statement);
+                }
+            }
 
             return rows;
         }
 
-        private static void ValidateResult(SQLiteResult result)
+        private TableDefinition GetTable(string tableName)
         {
-            if (result != SQLiteResult.DONE)
+            TableDefinition table;
+            if (!this.tableMap.TryGetValue(tableName, out table))
             {
-                throw new SQLiteException(string.Format(Properties.Resources.SQLiteStore_QueryExecutionFailed, result));
+                throw new InvalidOperationException(string.Format(Properties.Resources.SQLiteStore_TableNotDefined, tableName));
+            }
+            return table;
+        }
+
+        private async Task InitializeConfig()
+        {
+            foreach (KeyValuePair<string, TableDefinition> table in this.tableMap)
+            {
+                if (!MobileServiceLocalSystemTables.All.Contains(table.Key))
+                {
+                    // preserve system properties setting for non-system tables
+                    string name = String.Format("systemProperties|{0}", table.Key);
+                    string value = ((int)table.Value.SystemProperties).ToString();
+                    await this.SaveSetting(name, value);
+                }
             }
         }
 
-        private JObject ReadRow(TableDefinition table, ISQLiteStatement statement)
+        private Task UpsertAsyncInternal(string tableName, IEnumerable<JObject> items, bool ignoreMissingColumns)
         {
-            var row = new JObject();
-            for (int i = 0; i < statement.ColumnCount; i++)
-            {
-                string name = statement.ColumnName(i);
-                object value = statement[i];
+            TableDefinition table = GetTable(tableName);
 
+            var first = items.FirstOrDefault();
+            if (first == null)
+            {
+                return Task.FromResult(0);
+            }
+
+            // Get the columns which we want to map into the database.
+            var columns = new List<ColumnDefinition>();
+            foreach (var prop in first.Properties())
+            {
                 ColumnDefinition column;
-                if (table.TryGetValue(name, out column))
+
+                // If the column is coming from the server we can just ignore it,
+                // otherwise, throw to alert the caller that they have passed an invalid column
+                if (!table.TryGetValue(prop.Name, out column) && !ignoreMissingColumns)
                 {
-                    JToken jVal = SqlHelpers.DeserializeValue(value, column.StoreType, column.JsonType);
-                    row[name] = jVal;
+                    throw new InvalidOperationException(string.Format(Properties.Resources.SQLiteStore_ColumnNotDefined, prop.Name, tableName));
                 }
-                else
+
+                if (column != null)
                 {
-                    row[name] = value == null ? null : JToken.FromObject(value);
+                    columns.Add(column);
                 }
             }
-            return row;
-        }
 
-        private static MobileServiceSystemProperties GetSystemProperties(JObject item)
-        {
-            var sysProperties = MobileServiceSystemProperties.None;
+            if (columns.Count == 0)
+            {
+                // no query to execute if there are no columns in the table
+                return Task.FromResult(0);
+            }
 
-            if (item[MobileServiceSystemColumns.Version] != null)
-            {
-                sysProperties = sysProperties | MobileServiceSystemProperties.Version;
-            }
-            if (item[MobileServiceSystemColumns.CreatedAt] != null)
-            {
-                sysProperties = sysProperties | MobileServiceSystemProperties.CreatedAt;
-            }
-            if (item[MobileServiceSystemColumns.UpdatedAt] != null)
-            {
-                sysProperties = sysProperties | MobileServiceSystemProperties.UpdatedAt;
-            }
-            if (item[MobileServiceSystemColumns.Deleted] != null)
-            {
-                sysProperties = sysProperties | MobileServiceSystemProperties.Deleted;
-            }
-            return sysProperties;
-        }
+            this.ExecuteNonQuery("BEGIN TRANSACTION", null);
 
-        protected override void Dispose(bool disposing)
-        {
-            if (disposing)
-            {
-                this.connection.Dispose();
-            }
+            BatchInsert(tableName, items, columns.Where(c => c.Name.Equals(MobileServiceSystemColumns.Id)).Take(1).ToList());
+            BatchUpdate(tableName, items, columns);
+
+            this.ExecuteNonQuery("COMMIT TRANSACTION", null);
+
+            return Task.FromResult(0);
         }
     }
 }

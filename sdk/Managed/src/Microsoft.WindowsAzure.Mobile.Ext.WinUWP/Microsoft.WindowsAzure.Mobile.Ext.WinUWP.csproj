@@ -159,6 +159,7 @@
       <Link>Push\WnsTemplateRegistration.cs</Link>
     </Compile>
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="SQLite\CrossConnectionExtension.cs" />
     <EmbeddedResource Include="Properties\Microsoft.WindowsAzure.Mobile.Ext.WinUWP.rd.xml" />
   </ItemGroup>
   <ItemGroup>
