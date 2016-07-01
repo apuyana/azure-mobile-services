@@ -59,6 +59,7 @@
     <Compile Include="Push\WnsRegistration.cs" />
     <Compile Include="Push\WnsTemplateRegistration.cs" />
     <Compile Include="SQLite\CrossConnectionExtension.cs" />
+    <Compile Include="SQLite\SQLiteConnector.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Microsoft.WindowsAzure.MobileServices\Microsoft.WindowsAzure.Mobile.csproj">

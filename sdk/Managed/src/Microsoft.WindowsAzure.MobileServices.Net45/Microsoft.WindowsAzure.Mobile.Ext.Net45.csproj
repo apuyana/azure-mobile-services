@@ -81,6 +81,7 @@
     <Compile Include="Platform\PlatformInformation.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="SQLite\CrossConnectionExtension.cs" />
+    <Compile Include="SQLite\SQLiteConnector.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Microsoft.WindowsAzure.MobileServices\Microsoft.WindowsAzure.Mobile.csproj">

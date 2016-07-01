@@ -96,6 +96,8 @@
       <DependentUpon>Resources.tt</DependentUpon>
     </Compile>
     <Compile Include="SQLite\CrossConnection.cs" />
+    <Compile Include="SQLite\ISQLiteConnector.cs" />
+    <Compile Include="SQLite\SQLiteConnectorBase.cs" />
     <Compile Include="Table\MobileServiceObjectReader.cs" />
     <Compile Include="Table\Sync\Queue\Operations\MobileServiceTableKind.cs" />
     <Compile Include="Table\MobileServiceSystemColumns.cs" />

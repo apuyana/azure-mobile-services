@@ -15,8 +15,7 @@ namespace Microsoft.WindowsAzure.Mobile.SQLiteStore.Android.Test
         static App()
         {
             CurrentPlatform.Init();
-
-            SQLiteStoreTests.TestDbName = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Personal), "test.db");
+            
             Harness.Reporter = Listener;
             Harness.LoadTestAssembly(typeof(SQLiteStoreTests).Assembly);
         }

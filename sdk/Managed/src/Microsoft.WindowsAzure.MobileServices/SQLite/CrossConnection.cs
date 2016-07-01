@@ -14,9 +14,19 @@ namespace Microsoft.WindowsAzure.Mobile.SQLite
     public class CrossConnection
     {
         /// <summary>
+        /// Connector creation delegate.
+        /// </summary>
+        private static Func<ISQLiteConnector> connectorCreationDelegate;
+
+        /// <summary>
         /// Lazy implementation.
         /// </summary>
         private static Lazy<ISQLitePlatform> Implementation = new Lazy<ISQLitePlatform>(() => CreatePlatform(), System.Threading.LazyThreadSafetyMode.PublicationOnly);
+
+        /// <summary>
+        /// Lazy implementation.
+        /// </summary>
+        private static Lazy<ISQLiteConnector> ImplementationConnector = new Lazy<ISQLiteConnector>(() => CreateConnector(), System.Threading.LazyThreadSafetyMode.PublicationOnly);
 
         /// <summary>
         /// Cross connection instance.
@@ -29,9 +39,43 @@ namespace Microsoft.WindowsAzure.Mobile.SQLite
         private static Func<ISQLitePlatform> platformCreationDelegate;
 
         /// <summary>
+        /// Current connector to use
+        /// </summary>
+        public static ISQLiteConnector Connector
+        {
+            get
+            {
+                var ret = ImplementationConnector.Value;
+                if (ret == null)
+                {
+                    throw NotImplementedInReferenceAssembly();
+                }
+                return ret;
+            }
+        }
+
+        /// <summary>
+        /// Platform creation delegate.
+        /// </summary>
+        public static Func<ISQLiteConnector> ConnectorCreationDelegate
+        {
+            get
+            {
+                return connectorCreationDelegate;
+            }
+
+            set
+            {
+                connectorCreationDelegate = value;
+
+                Dispose();
+            }
+        }
+
+        /// <summary>
         /// Current settings to use
         /// </summary>
-        public static ISQLitePlatform Current
+        public static ISQLitePlatform CurrentPlatform
         {
             get
             {
@@ -82,6 +126,11 @@ namespace Microsoft.WindowsAzure.Mobile.SQLite
             {
                 Implementation = new Lazy<ISQLitePlatform>(() => CreatePlatform(), System.Threading.LazyThreadSafetyMode.PublicationOnly);
             }
+
+            if (ImplementationConnector != null && ImplementationConnector.IsValueCreated)
+            {
+                ImplementationConnector = new Lazy<ISQLiteConnector>(() => CreateConnector(), System.Threading.LazyThreadSafetyMode.PublicationOnly);
+            }
         }
 
         /// <summary>
@@ -91,6 +140,22 @@ namespace Microsoft.WindowsAzure.Mobile.SQLite
         internal static Exception NotImplementedInReferenceAssembly()
         {
             return new NotImplementedException("This functionality is not implemented in the portable version of this assembly.  You should reference the NuGet package from your main application project in order to reference the platform-specific implementation.");
+        }
+
+        /// <summary>
+        /// Create connector.
+        /// </summary>
+        /// <returns>Platform to use.</returns>
+        private static ISQLiteConnector CreateConnector()
+        {
+            ISQLiteConnector connector = null;
+
+            if (ConnectorCreationDelegate != null)
+            {
+                connector = ConnectorCreationDelegate();
+            }
+
+            return connector;
         }
 
         /// <summary>

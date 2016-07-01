@@ -47,6 +47,9 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "NugetConfig", "NugetConfig"
 	ProjectSection(SolutionItems) = preProject
 		src\WindowsAzure.MobileServices.nuspec = src\WindowsAzure.MobileServices.nuspec
 		src\WindowsAzure.MobileServices.SQLiteStore.nuspec = src\WindowsAzure.MobileServices.SQLiteStore.nuspec
+		src\WindowsAzure.MobileServices.WindowsPhone8.targets = src\WindowsAzure.MobileServices.WindowsPhone8.targets
+		src\WindowsAzure.MobileServices.WinPhone81.targets = src\WindowsAzure.MobileServices.WinPhone81.targets
+		src\WindowsAzure.MobileServices.WinStore.targets = src\WindowsAzure.MobileServices.WinStore.targets
 	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Microsoft.WindowsAzure.Mobile.Ext.WP81", "src\Microsoft.WindowsAzure.MobileServices.WindowsPhone81\Microsoft.WindowsAzure.Mobile.Ext.WP81.csproj", "{02EEF75A-D824-4203-B243-C1B97B0D35A9}"
@@ -138,8 +141,8 @@ Global
 		{41E0BBEA-091B-4C06-AE08-B7F50E2BEB8A}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
 		{41E0BBEA-091B-4C06-AE08-B7F50E2BEB8A}.Release|Mixed Platforms.Build.0 = Release|Any CPU
 		{41E0BBEA-091B-4C06-AE08-B7F50E2BEB8A}.Release|x64.ActiveCfg = Release|Any CPU
-		{41E0BBEA-091B-4C06-AE08-B7F50E2BEB8A}.Release|x86.ActiveCfg = Release|Any CPU
-		{41E0BBEA-091B-4C06-AE08-B7F50E2BEB8A}.Release|x86.Build.0 = Release|Any CPU
+		{41E0BBEA-091B-4C06-AE08-B7F50E2BEB8A}.Release|x86.ActiveCfg = Release|x86
+		{41E0BBEA-091B-4C06-AE08-B7F50E2BEB8A}.Release|x86.Build.0 = Release|x86
 		{A2500BD2-A9A2-4085-9978-DEE3675B02DD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{A2500BD2-A9A2-4085-9978-DEE3675B02DD}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A2500BD2-A9A2-4085-9978-DEE3675B02DD}.Debug|ARM.ActiveCfg = Debug|Any CPU

@@ -60,24 +60,13 @@ namespace Microsoft.WindowsAzure.MobileServices.SQLiteStore
                 throw new ArgumentNullException("fileName");
             }
 
-            this.connection = new SQLiteConnection(SQLitePlatform, fileName);
+            this.connection = Mobile.SQLite.CrossConnection.Connector.GetConnection(fileName);
         }
 
         /// <summary>
         /// Default constructor.
         /// </summary>
-        protected MobileServiceSQLiteStore() { }
-
-        /// <summary>
-        /// Sqlite platform.
-        /// </summary>
-        protected virtual ISQLitePlatform SQLitePlatform
-        {
-            get
-            {
-                return Mobile.SQLite.CrossConnection.Current;
-            }
-        }
+        protected MobileServiceSQLiteStore() { }        
 
         /// <summary>
         /// Defines the local table on the store.

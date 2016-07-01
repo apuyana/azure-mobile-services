@@ -27,7 +27,7 @@ namespace Microsoft.WindowsAzure.MobileServices.SQLiteStore.Test
             long count;
             string sql = "SELECT COUNT(1) from " + tableName;
 
-            using (var connection = new SQLiteConnection(Mobile.SQLite.CrossConnection.Current, dbName))
+            using (var connection = Mobile.SQLite.CrossConnection.Connector.GetConnection(dbName))
             {
                 var command = connection.CreateCommand(sql);
                 count = command.ExecuteScalar<int>();
@@ -43,7 +43,7 @@ namespace Microsoft.WindowsAzure.MobileServices.SQLiteStore.Test
 
         public static void ExecuteNonQuery(string dbName, string sql)
         {
-            using (var connection = new SQLiteConnection(Mobile.SQLite.CrossConnection.Current, dbName))
+            using (var connection = Mobile.SQLite.CrossConnection.Connector.GetConnection(dbName))
             {
                 var command = connection.CreateCommand(sql);
                 command.ExecuteNonQuery();

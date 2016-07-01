@@ -20,6 +20,11 @@ namespace Microsoft.WindowsAzure.Mobile.SQLite
             {
                 CrossConnection.PlatformCreationDelegate = () => { return new global::SQLite.Net.Platform.XamarinIOS.SQLitePlatformIOS(); };
             }
+
+            if (CrossConnection.ConnectorCreationDelegate == null)
+            {
+                CrossConnection.ConnectorCreationDelegate = () => { return new SQLiteConnector(); };
+            }
         }
     }
 }
