@@ -47,6 +47,12 @@
     <WarningLevel>4</WarningLevel>
     <DocumentationFile>$(OutputPath)\Microsoft.WindowsAzure.Mobile.Ext.xml</DocumentationFile>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|ARM'">
+    <OutputPath>bin\ARM\Release\</OutputPath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x86'">
+    <OutputPath>bin\x86\Release\</OutputPath>
+  </PropertyGroup>
   <ItemGroup>
     <Compile Include="..\Microsoft.WindowsAzure.MobileServices.WindowsStore\Platform\CurrentPlatform.cs">
       <Link>Platform\CurrentPlatform.cs</Link>

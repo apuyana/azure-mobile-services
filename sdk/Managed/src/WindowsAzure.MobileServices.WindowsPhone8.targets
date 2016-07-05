@@ -13,6 +13,9 @@
       <Reference Include="Microsoft.WindowsAzure.Mobile.Ext">
         <HintPath>$(MSBuildThisFileDirectory)$(Platform)\Microsoft.WindowsAzure.Mobile.Ext.dll</HintPath>
       </Reference>
+      <Reference Include="Microsoft.WindowsAzure.Mobile.UI">
+        <HintPath>$(MSBuildThisFileDirectory)$(Platform)\Microsoft.WindowsAzure.Mobile.UI.dll</HintPath>
+      </Reference>
     </ItemGroup> 
   </Target>
 </Project>

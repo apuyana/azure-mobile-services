@@ -47,6 +47,12 @@
     <WarningLevel>4</WarningLevel>
     <DocumentationFile>$(OutputPath)\Microsoft.WindowsAzure.Mobile.UI.xml</DocumentationFile>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x86'">
+    <OutputPath>bin\x86\Release\</OutputPath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|ARM'">
+    <OutputPath>bin\ARM\Release\</OutputPath>
+  </PropertyGroup>
   <ItemGroup>
     <Compile Include="..\Microsoft.WindowsAzure.MobileServices.WindowsStore\Authentication\MobileServiceUIAuthentication.cs">
       <Link>Authentication\MobileServiceUIAuthentication.cs</Link>
@@ -62,7 +68,7 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Microsoft.WindowsAzure.MobileServices.WindowsPhone8\Microsoft.WindowsAzure.Mobile.Ext.WP8.csproj">
-      <Project>{EB3834A2-3C20-4F39-BEE9-87DFCAB81670}</Project>
+      <Project>{3114e433-7fc1-4056-8cf9-2406e32bb10d}</Project>
       <Name>Microsoft.WindowsAzure.Mobile.Ext.WP8</Name>
     </ProjectReference>
     <ProjectReference Include="..\Microsoft.WindowsAzure.MobileServices\Microsoft.WindowsAzure.Mobile.csproj">

@@ -24,11 +24,13 @@
     </dependencies>
   </metadata>
   <files>
+    <!-- Android -->
     <file src="Microsoft.WindowsAzure.MobileServices.Android\bin\Release\Microsoft.WindowsAzure.Mobile.dll" target="lib\monoandroid\Microsoft.WindowsAzure.Mobile.dll" />
     <file src="Microsoft.WindowsAzure.MobileServices.Android\bin\Release\Microsoft.WindowsAzure.Mobile.Ext.dll" target="lib\monoandroid\Microsoft.WindowsAzure.Mobile.Ext.dll" />
     <file src="Microsoft.WindowsAzure.MobileServices.Android\bin\Release\Microsoft.WindowsAzure.Mobile.Ext.xml" target="lib\monoandroid\Microsoft.WindowsAzure.Mobile.Ext.xml" />
     <file src="Microsoft.WindowsAzure.MobileServices.Android\bin\Release\Microsoft.WindowsAzure.Mobile.xml" target="lib\monoandroid\Microsoft.WindowsAzure.Mobile.xml" />
 
+    <!-- iOS -->
     <file src="Microsoft.WindowsAzure.MobileServices.iOS\bin\classic\Release\Microsoft.WindowsAzure.Mobile.dll" target="lib\monotouch\Microsoft.WindowsAzure.Mobile.dll" />
     <file src="Microsoft.WindowsAzure.MobileServices.iOS\bin\classic\Release\Microsoft.WindowsAzure.Mobile.Ext.dll" target="lib\monotouch\Microsoft.WindowsAzure.Mobile.Ext.dll" />
     <file src="Microsoft.WindowsAzure.MobileServices.iOS\bin\classic\Release\Microsoft.WindowsAzure.Mobile.Ext.xml" target="lib\monotouch\Microsoft.WindowsAzure.Mobile.Ext.xml" />
@@ -38,45 +40,57 @@
     <file src="Microsoft.WindowsAzure.MobileServices.iOS\bin\iPhone\Release\Microsoft.WindowsAzure.Mobile.Ext.xml" target="lib\Xamarin.iOS10\Microsoft.WindowsAzure.Mobile.Ext.xml" />
     <file src="Microsoft.WindowsAzure.MobileServices.iOS\bin\iPhone\Release\Microsoft.WindowsAzure.Mobile.xml" target="lib\Xamarin.iOS10\Microsoft.WindowsAzure.Mobile.xml" />
 
+    <!-- .Net 4.5 -->
     <file src="Microsoft.WindowsAzure.MobileServices.Net45\bin\Release\Microsoft.WindowsAzure.Mobile.dll" target="lib\net45\Microsoft.WindowsAzure.Mobile.dll" />
     <file src="Microsoft.WindowsAzure.MobileServices.Net45\bin\Release\Microsoft.WindowsAzure.Mobile.Ext.dll" target="lib\net45\Microsoft.WindowsAzure.Mobile.Ext.dll" />
     <file src="Microsoft.WindowsAzure.MobileServices.Net45\bin\Release\Microsoft.WindowsAzure.Mobile.Ext.XML" target="lib\net45\Microsoft.WindowsAzure.Mobile.Ext.XML" />
     <file src="Microsoft.WindowsAzure.MobileServices.Net45\bin\Release\Microsoft.WindowsAzure.Mobile.xml" target="lib\net45\Microsoft.WindowsAzure.Mobile.xml" />
 
-    <file src="Microsoft.WindowsAzure.MobileServices.WindowsStore\bin\Release\Microsoft.WindowsAzure.Mobile.dll" target="lib\netcore451\Microsoft.WindowsAzure.Mobile.dll" />
-    <file src="Microsoft.WindowsAzure.MobileServices.WindowsStore\bin\Release\Microsoft.WindowsAzure.Mobile.Ext.dll" target="lib\netcore451\Microsoft.WindowsAzure.Mobile.Ext.dll" />
-    <file src="Microsoft.WindowsAzure.MobileServices.WindowsStore\bin\Release\Microsoft.WindowsAzure.Mobile.Ext.pri" target="lib\netcore451\Microsoft.WindowsAzure.Mobile.Ext.pri" />
-    <file src="Microsoft.WindowsAzure.MobileServices.WindowsStore\bin\Release\Microsoft.WindowsAzure.Mobile.Ext.xml" target="lib\netcore451\Microsoft.WindowsAzure.Mobile.Ext.xml" />
-    <file src="Microsoft.WindowsAzure.MobileServices.WindowsStore\bin\Release\Microsoft.WindowsAzure.Mobile.xml" target="lib\netcore451\Microsoft.WindowsAzure.Mobile.xml" />
-
     <!-- Windows UWP -->
     <!-- Reference -->
-    <file src="Microsoft.WindowsAzure.Mobile.Ext.WinUWP\bin\Release\Microsoft.WindowsAzure.Mobile.dll" target="ref\uap10.0\Microsoft.WindowsAzure.Mobile.dll" />
-    <file src="Microsoft.WindowsAzure.Mobile.Ext.WinUWP\bin\Release\Microsoft.WindowsAzure.Mobile.Ext.dll" target="ref\uap10.0\Microsoft.WindowsAzure.Mobile.Ext.dll" />        
+    <file src="Microsoft.WindowsAzure.Mobile.Ext.WinUWP\Ref\Microsoft.WindowsAzure.Mobile.dll" target="ref\uap10.0\" />
+    <file src="Microsoft.WindowsAzure.Mobile.Ext.WinUWP\Ref\Microsoft.WindowsAzure.Mobile.Ext.dll" target="ref\uap10.0\" />        
 
     <!-- ARM -->
-    <file src="Microsoft.WindowsAzure.Mobile.Ext.WinUWP\bin\ARM\Release\Microsoft.WindowsAzure.Mobile.dll" target="runtimes\win10-arm\lib\uap10.0\\Microsoft.WindowsAzure.Mobile.dll" />
-    <file src="Microsoft.WindowsAzure.Mobile.Ext.WinUWP\bin\ARM\Release\Microsoft.WindowsAzure.Mobile.Ext.dll" target="runtimes\win10-arm\lib\uap10.0\Microsoft.WindowsAzure.Mobile.Ext.dll" />
-    <file src="Microsoft.WindowsAzure.Mobile.Ext.WinUWP\bin\ARM\Release\Microsoft.WindowsAzure.Mobile.Ext.pri" target="runtimes\win10-arm\lib\uap10.0\Microsoft.WindowsAzure.Mobile.Ext.pri" />
-    <file src="Microsoft.WindowsAzure.Mobile.Ext.WinUWP\bin\ARM\Release\Microsoft.WindowsAzure.Mobile.xml" target="runtimes\win10-arm\lib\uap10.0\Microsoft.WindowsAzure.Mobile.xml" />
+    <file src="Microsoft.WindowsAzure.Mobile.Ext.WinUWP\bin\ARM\Release\Microsoft.WindowsAzure.Mobile.dll" target="runtimes\win10-arm\lib\uap10.0\" />
+    <file src="Microsoft.WindowsAzure.Mobile.Ext.WinUWP\bin\ARM\Release\Microsoft.WindowsAzure.Mobile.Ext.dll" target="runtimes\win10-arm\lib\uap10.0\" />
+    <file src="Microsoft.WindowsAzure.Mobile.Ext.WinUWP\bin\ARM\Release\Microsoft.WindowsAzure.Mobile.Ext.pri" target="runtimes\win10-arm\lib\uap10.0\" />
+    <file src="Microsoft.WindowsAzure.Mobile.Ext.WinUWP\bin\ARM\Release\Microsoft.WindowsAzure.Mobile.xml" target="runtimes\win10-arm\lib\uap10.0\" />
 
     <!-- x86 -->
-    <file src="Microsoft.WindowsAzure.Mobile.Ext.WinUWP\bin\ARM\Release\Microsoft.WindowsAzure.Mobile.dll" target="runtimes\win10-x86\lib\uap10.0\\Microsoft.WindowsAzure.Mobile.dll" />
-    <file src="Microsoft.WindowsAzure.Mobile.Ext.WinUWP\bin\ARM\Release\Microsoft.WindowsAzure.Mobile.Ext.dll" target="runtimes\win10-x86\lib\uap10.0\Microsoft.WindowsAzure.Mobile.Ext.dll" />
-    <file src="Microsoft.WindowsAzure.Mobile.Ext.WinUWP\bin\ARM\Release\Microsoft.WindowsAzure.Mobile.Ext.pri" target="runtimes\win10-x86\lib\uap10.0\Microsoft.WindowsAzure.Mobile.Ext.pri" />
-    <file src="Microsoft.WindowsAzure.Mobile.Ext.WinUWP\bin\ARM\Release\Microsoft.WindowsAzure.Mobile.xml" target="runtimes\win10-x86\lib\uap10.0\Microsoft.WindowsAzure.Mobile.xml" />
+    <file src="Microsoft.WindowsAzure.Mobile.Ext.WinUWP\bin\ARM\Release\Microsoft.WindowsAzure.Mobile.dll" target="runtimes\win10-x86\lib\uap10.0\" />
+    <file src="Microsoft.WindowsAzure.Mobile.Ext.WinUWP\bin\ARM\Release\Microsoft.WindowsAzure.Mobile.Ext.dll" target="runtimes\win10-x86\lib\uap10.0\" />
+    <file src="Microsoft.WindowsAzure.Mobile.Ext.WinUWP\bin\ARM\Release\Microsoft.WindowsAzure.Mobile.Ext.pri" target="runtimes\win10-x86\lib\uap10.0\" />
+    <file src="Microsoft.WindowsAzure.Mobile.Ext.WinUWP\bin\ARM\Release\Microsoft.WindowsAzure.Mobile.xml" target="runtimes\win10-x86\lib\uap10.0\" />
 
+    <!-- Portable -->
     <file src="Microsoft.WindowsAzure.MobileServices\bin\Release\Microsoft.WindowsAzure.Mobile.dll" target="lib\portable-win+net45+wp8+wpa81+monotouch+monoandroid\Microsoft.WindowsAzure.Mobile.dll" />
     <file src="Microsoft.WindowsAzure.MobileServices\bin\Release\Microsoft.WindowsAzure.Mobile.xml" target="lib\portable-win+net45+wp8+wpa81+monotouch+monoandroid\Microsoft.WindowsAzure.Mobile.xml" />
 
-    <file src="Microsoft.WindowsAzure.MobileServices.WindowsPhone8\bin\Release\Microsoft.WindowsAzure.Mobile.dll" target="lib\wp8\Microsoft.WindowsAzure.Mobile.dll" />
-    <file src="Microsoft.WindowsAzure.MobileServices.WindowsPhone8\bin\Release\Microsoft.WindowsAzure.Mobile.Ext.dll" target="lib\wp8\Microsoft.WindowsAzure.Mobile.Ext.dll" />
-    <file src="Microsoft.WindowsAzure.MobileServices.WindowsPhone8\bin\Release\Microsoft.WindowsAzure.Mobile.xml" target="lib\wp8\Microsoft.WindowsAzure.Mobile.xml" />
-    <file src="Microsoft.WindowsAzure.MobileServices.WindowsPhone8.UI\bin\Release\Microsoft.WindowsAzure.Mobile.UI.dll" target="lib\wp8\Microsoft.WindowsAzure.Mobile.UI.dll" />
+    <!-- WinPhone8 -->
+    <file src="Microsoft.WindowsAzure.MobileServices.WindowsPhone8.UI\bin\Release\Microsoft.WindowsAzure.Mobile.dll" target="lib\wp8\Microsoft.WindowsAzure.Mobile.dll" />
+    <file src="Microsoft.WindowsAzure.MobileServices.WindowsPhone8.UI\bin\ARM\Release\Microsoft.WindowsAzure.Mobile.Ext.dll" target="build\wp8\ARM\Microsoft.WindowsAzure.Mobile.Ext.dll" />
+    <file src="Microsoft.WindowsAzure.MobileServices.WindowsPhone8.UI\bin\x86\Release\Microsoft.WindowsAzure.Mobile.Ext.dll" target="build\wp8\x86\Microsoft.WindowsAzure.Mobile.Ext.dll" />
+    <file src="Microsoft.WindowsAzure.MobileServices.WindowsPhone8.UI\bin\ARM\Release\Microsoft.WindowsAzure.Mobile.UI.dll" target="build\wp8\ARM\Microsoft.WindowsAzure.Mobile.UI.dll" />
+    <file src="Microsoft.WindowsAzure.MobileServices.WindowsPhone8.UI\bin\x86\Release\Microsoft.WindowsAzure.Mobile.UI.dll" target="build\wp8\x86\Microsoft.WindowsAzure.Mobile.UI.dll" />    
+    <file src="WindowsAzure.MobileServices.WindowsPhone8.targets" target="build\wp8\WindowsAzure.MobileServices.WindowsPhone8.targets" />
 
+    <!-- WinPhone81 -->
     <file src="Microsoft.WindowsAzure.MobileServices.WindowsPhone81\bin\Release\Microsoft.WindowsAzure.Mobile.dll" target="lib\wpa81\Microsoft.WindowsAzure.Mobile.dll" />
-    <file src="Microsoft.WindowsAzure.MobileServices.WindowsPhone81\bin\Release\Microsoft.WindowsAzure.Mobile.Ext.dll" target="lib\wpa81\Microsoft.WindowsAzure.Mobile.Ext.dll" />
-    <file src="Microsoft.WindowsAzure.MobileServices.WindowsPhone81\bin\Release\Microsoft.WindowsAzure.Mobile.Ext.xml" target="lib\wpa81\Microsoft.WindowsAzure.Mobile.Ext.xml" />
-    <file src="Microsoft.WindowsAzure.MobileServices.WindowsPhone81\bin\Release\Microsoft.WindowsAzure.Mobile.xml" target="lib\wpa81\Microsoft.WindowsAzure.Mobile.xml" />
+    <file src="Microsoft.WindowsAzure.MobileServices.WindowsPhone81\bin\ARM\Release\Microsoft.WindowsAzure.Mobile.Ext.dll" target="build\wpa81\ARM\" />
+    <file src="Microsoft.WindowsAzure.MobileServices.WindowsPhone81\bin\ARM\Release\Microsoft.WindowsAzure.Mobile.Ext.pri" target="build\wpa81\ARM\" />    
+    <file src="Microsoft.WindowsAzure.MobileServices.WindowsPhone81\bin\x86\Release\Microsoft.WindowsAzure.Mobile.Ext.dll" target="build\wpa81\x86\" />
+    <file src="Microsoft.WindowsAzure.MobileServices.WindowsPhone81\bin\x86\Release\Microsoft.WindowsAzure.Mobile.Ext.pri" target="build\wpa81\x86\" />    
+    <file src="WindowsAzure.MobileServices.WinPhone81.targets" target="build\wpa81\WindowsAzure.MobileServices.WinPhone81.targets" />
+
+    <!-- WinStore8.1 -->
+    <file src="Microsoft.WindowsAzure.MobileServices.WindowsStore\bin\Release\Microsoft.WindowsAzure.Mobile.dll" target="lib\netcore451\Microsoft.WindowsAzure.Mobile.dll" />
+    <file src="Microsoft.WindowsAzure.MobileServices.WindowsStore\bin\ARM\Release\Microsoft.WindowsAzure.Mobile.Ext.dll" target="build\netcore451\ARM\" />
+    <file src="Microsoft.WindowsAzure.MobileServices.WindowsStore\bin\ARM\Release\Microsoft.WindowsAzure.Mobile.Ext.pri" target="build\netcore451\ARM\" />
+    <file src="Microsoft.WindowsAzure.MobileServices.WindowsStore\bin\ARM\Release\Microsoft.WindowsAzure.Mobile.Ext.xml" target="build\netcore451\ARM\" />
+    <file src="Microsoft.WindowsAzure.MobileServices.WindowsStore\bin\x86\Release\Microsoft.WindowsAzure.Mobile.Ext.dll" target="build\netcore451\x86\" />
+    <file src="Microsoft.WindowsAzure.MobileServices.WindowsStore\bin\x86\Release\Microsoft.WindowsAzure.Mobile.Ext.pri" target="build\netcore451\x86\" />
+    <file src="Microsoft.WindowsAzure.MobileServices.WindowsStore\bin\x86\Release\Microsoft.WindowsAzure.Mobile.Ext.xml" target="build\netcore451\x86\" />
+    <file src="WindowsAzure.MobileServices.WinStore.targets" target="build\netcore451\WindowsAzure.MobileServices.WinStore.targets" />
   </files>
 </package>

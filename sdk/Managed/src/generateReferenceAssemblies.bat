@@ -1,0 +1,6 @@
+mkdir "C:\Proyectos\azure-mobile-services\sdk\Managed\src\Microsoft.WindowsAzure.Mobile.Ext.WinUWP\Ref"
+xcopy /Y "C:\Proyectos\azure-mobile-services\sdk\Managed\src\Microsoft.WindowsAzure.Mobile.Ext.WinUWP\bin\X86\Release\Microsoft.WindowsAzure.Mobile.dll" "C:\Proyectos\azure-mobile-services\sdk\Managed\src\Microsoft.WindowsAzure.Mobile.Ext.WinUWP\Ref\Microsoft.WindowsAzure.Mobile.dll"
+"C:\Program Files (x86)\Microsoft SDKs\Windows\v10.0A\bin\NETFX 4.6.1 Tools\CorFlags.exe"  /32bitreq- C:\Proyectos\azure-mobile-services\sdk\Managed\src\Microsoft.WindowsAzure.Mobile.Ext.WinUWP\Ref\Microsoft.WindowsAzure.Mobile.dll
+
+xcopy /Y "C:\Proyectos\azure-mobile-services\sdk\Managed\src\Microsoft.WindowsAzure.Mobile.Ext.WinUWP\bin\X86\Release\Microsoft.WindowsAzure.Mobile.Ext.dll" "C:\Proyectos\azure-mobile-services\sdk\Managed\src\Microsoft.WindowsAzure.Mobile.Ext.WinUWP\Ref\Microsoft.WindowsAzure.Mobile.Ext.dll"
+"C:\Program Files (x86)\Microsoft SDKs\Windows\v10.0A\bin\NETFX 4.6.1 Tools\CorFlags.exe"  /32bitreq- C:\Proyectos\azure-mobile-services\sdk\Managed\src\Microsoft.WindowsAzure.Mobile.Ext.WinUWP\Ref\Microsoft.WindowsAzure.Mobile.Ext.dll
