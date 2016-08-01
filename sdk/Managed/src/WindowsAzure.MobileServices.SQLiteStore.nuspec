@@ -2,7 +2,7 @@
 <package xmlns="http://schemas.microsoft.com/packaging/2011/08/nuspec.xsd">
   <metadata>
     <id>Anuracode.WindowsAzure.MobileServices.SQLiteStore</id>
-    <version>1.0.2.9</version>
+    <version>1.0.2.10</version>
     <title>Azure Mobile Services SQLiteStore</title>
     <authors>Microsoft</authors>
     <owners>Microsoft,azure-sdk</owners>
@@ -27,6 +27,9 @@
     <file src="Microsoft.WindowsAzure.MobileServices.SQLiteStore\bin\Release\Microsoft.WindowsAzure.Mobile.SQLiteStore.dll" target="lib\monotouch\" />
     <file src="Microsoft.WindowsAzure.MobileServices.SQLiteStore\bin\Release\Microsoft.WindowsAzure.Mobile.SQLiteStore.dll" target="lib\MonoAndroid\" />
     <file src="Microsoft.WindowsAzure.MobileServices.SQLiteStore\bin\Release\Microsoft.WindowsAzure.Mobile.SQLiteStore.dll" target="lib\uap\" />
+    <file src="Microsoft.WindowsAzure.MobileServices.SQLiteStore\bin\Release\Microsoft.WindowsAzure.Mobile.SQLiteStore.dll" target="lib\wp8\" />
+    <file src="Microsoft.WindowsAzure.MobileServices.SQLiteStore\bin\Release\Microsoft.WindowsAzure.Mobile.SQLiteStore.dll" target="lib\wpa8\" />
+    <file src="Microsoft.WindowsAzure.MobileServices.SQLiteStore\bin\Release\Microsoft.WindowsAzure.Mobile.SQLiteStore.dll" target="lib\win8\" />
     <file src="Microsoft.WindowsAzure.MobileServices.SQLiteStore\bin\Release\Microsoft.WindowsAzure.Mobile.SQLiteStore.dll" target="lib\portable-net45+win8+wpa81+wp8\" />
   </files>
 </package>
